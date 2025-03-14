@@ -1,158 +1,294 @@
 # UDFNetworking
 
-A powerful and flexible networking library for Swift applications that provides a clean, type-safe API for making HTTP requests.
+A modern, type-safe networking layer for Swift applications built to work seamlessly with the [UDF (Unidirectional Data Flow) architecture](https://github.com/Maks-Jago/SwiftUI-UDF).
 
-## Features
+## Overview
 
-- 🔧 Easy configuration with customizable base URLs, timeouts, and headers
-- 🚀 Modern async/await API support
-- 🔒 Type-safe request and response handling
-- 📝 Comprehensive logging system with multiple log levels
-- 🔄 Flexible request builder pattern
-- 🎯 Built-in response validation and error handling
-- 💾 Configurable caching policies
-- 🔍 Support for multiple environments (API, CDN, Media CDN)
-- 🛠 Extensible architecture
+UDFNetworking provides an elegant way to interact with REST APIs while maintaining the principles of the UDF pattern. This package offers:
+
+- 🌐 Clean, declarative API for network requests
+- 🔄 Seamless integration with UDF architecture
+- 🧩 Type-safe endpoint definitions
+- 🎯 Automatic request and response processing
+- 📝 Extensive logging features for debugging
 
 ## Installation
 
 ### Swift Package Manager
 
-Add the following dependency to your `Package.swift` file:
+Add UDFNetworking to your project using Swift Package Manager by adding it to your `Package.swift` file:
 
 ```swift
 dependencies: [
-    .package(url: "YOUR_REPOSITORY_URL", from: "VERSION")
+    .package(url: "https://github.com/boredarthur/UDFNetworking", from: "1.0.0")
 ]
 ```
 
-## Basic Usage
+Or add it directly in Xcode:
+1. Select File > Swift Packages > Add Package Dependency
+2. Enter the repository URL
+3. Follow the prompts to add the package to your project
 
-### Configuration
+## Getting Started
 
-Configure the API client before making any requests:
+### 1. Configure the API
+
+First, set up your API configuration:
 
 ```swift
+// Initialize the configuration
 let configuration = APIConfiguration(
     baseURL: URL(string: "https://api.example.com")!,
-    cdnURL: URL(string: "https://cdn.example.com")!, // Optional
-    mediaCDNURL: URL(string: "https://media.example.com")!, // Optional
     timeoutInterval: 30,
-    defaultHeaders: ["Content-Type": "application/json"],
-    logLevel: .debug
+    defaultHeaders: ["Content-Type": "application/json"]
 )
 
+// Configure the API
 API.configure(with: configuration)
 ```
 
-### Making Requests
+### 2. Define Endpoints
 
-Create and execute requests using the builder pattern:
+Create enums that conform to `APIEndpoint` for your API endpoints:
 
 ```swift
-// Define your endpoints
-enum Endpoints: String, APIEndpoint {
-    case users = "/users"
-    case user = "/users/{id}"
+enum UserEndpoints {
+    case profile(id: Int)
+    case follow(id: Int)
+    case reviews(id: Int)
+    
+    var rawValue: String {
+        switch self {
+        case let .profile(id):
+            return "/v1/users/\(id)"
+        case let .follow(id):
+            return "/v1/users/\(id)/followed_user"
+        case let .reviews(id):
+            return "/v1/users/\(id)/reviews"
+        }
+    }
 }
 
-// Make a GET request
-let request = try APIRequest.Builder(endpoint: Endpoints.users)
-    .method(.get)
-    .build()
-
-// Execute the request
-let users: [User] = try await BaseAPIClient.performRequest(with: request.urlRequest)
-
-// POST request with body
-let createRequest = try APIRequest.Builder(endpoint: Endpoints.users)
-    .method(.post)
-    .setJSONBody(newUser)
-    .build()
-
-let createdUser: User = try await BaseAPIClient.performRequest(with: createRequest.urlRequest)
+extension UserEndpoints: APIEndpoint {}
 ```
 
-### Error Handling
+### 3. Create API Clients
 
-The library provides comprehensive error handling through `APIError`:
+Create API clients that conform to `BaseAPIClientProtocol`:
 
 ```swift
-do {
-    let users = try await fetchUsers()
-} catch let error as APIError {
-    switch error {
-    case .invalidURL:
-        // Handle invalid URL
-    case .networkError(let underlying):
-        // Handle network errors
-    case .statusCode(let code, let error, let meta):
-        // Handle HTTP status code errors
-    // ... handle other cases
+enum UserAPIClient: BaseAPIClientProtocol {
+    static func getUserProfile(id: Int, token: String) async throws -> UserModel {
+        return try await fetchResource(
+            endpoint: UserEndpoints.profile(id: id),
+            token: token,
+            unwrapBy: "user",
+            parameters: {
+                URLQueryItem(name: URLParameter.includeFollowers.rawValue, value: "true")
+            }
+        )
+    }
+    
+    static func followUser(id: Int, token: String) async throws -> UserModel {
+        return try await createResource(
+            endpoint: UserEndpoints.follow(id: id),
+            token: token,
+            unwrapBy: "user",
+            parameters: {}
+        )
     }
 }
 ```
 
-### Logging
+### 4. Use in UDF Architecture
 
-Configure logging level to control debug output:
+Integrate with your UDF architecture by dispatching API calls from your effects:
 
 ```swift
-API.setLoggingLevel(.debug) // Options: .verbose, .debug, .info, .warning, .error, .none
+struct UserProfileEffect: Effect {
+    let userId: Int
+    let token: String
+    
+    func perform() async throws -> Action {
+        do {
+            let user = try await UserAPIClient.getUserProfile(id: userId, token: token)
+            return UserProfileAction.userLoaded(user)
+        } catch {
+            return UserProfileAction.loadingFailed(error)
+        }
+    }
+}
 ```
 
-## Advanced Features
+## Advanced Usage
+
+### Custom URL Parameters
+
+You can extend the `URLParameter` enum to add your own parameters:
+
+```swift
+extension URLParameter {
+    static let includeFollowers = URLParameter(rawValue: "include_followers")
+    static let includeReviews = URLParameter(rawValue: "include_reviews")
+}
+```
 
 ### Custom Headers
 
-```swift
-let request = try APIRequest.Builder(endpoint: Endpoints.users)
-    .method(.get)
-    .headers([
-        .init(.authorization, "Bearer \(token)"),
-        .init(.accept, "application/json")
-    ])
-    .build()
-```
-
-### Query Parameters
+Add custom headers to your requests:
 
 ```swift
-let request = try APIRequest.Builder(endpoint: Endpoints.users)
+let request = APIRequest.Builder(endpoint: endpoint)
     .method(.get)
-    .parameters {
-        URLQueryItem(name: "page", value: "1")
-        URLQueryItem(name: "per_page", value: "20")
+    .headers {
+        HeaderItem(.authorization, token)
+        HeaderItem(.apiVersion, "2.0")
     }
     .build()
 ```
 
-### Custom Configuration Per Request
+# UDFNetworking Logging System
+
+UDFNetworking includes a comprehensive logging system to help with debugging and monitoring network requests. This document explains how to configure and use the logging system effectively.
+
+## Log Levels
+
+The logging system supports four distinct levels of verbosity:
+
+| Level | Description |
+|-------|-------------|
+| `.none` | No logging is performed. Use this in production environments where logging is not needed. |
+| `.error` | Only errors and failed requests are logged. This is the default setting and is suitable for most production environments. |
+| `.debug` | Basic request and response information is logged, including URLs, methods, and status codes. Useful for development and testing environments. |
+| `.verbose` | Detailed information including headers, request bodies, and response bodies is logged. This provides maximum visibility but may impact performance and should only be used during development or troubleshooting. |
+
+## Configuring Logging
+
+Logging is configured as part of your API configuration. This ensures that logging settings are centralized and consistent:
 
 ```swift
-let customConfig = APIConfiguration(
-    baseURL: URL(string: "https://api2.example.com")!,
-    timeoutInterval: 60
+// For development environment with detailed logging
+let devConfig = APIConfiguration(
+    baseURL: URL(string: "https://api.example.com")!,
+    timeoutInterval: 30,
+    defaultHeaders: ["Content-Type": "application/json"],
+    logLevel: .verbose  // Enable detailed logging
 )
 
-let request = try APIRequest.Builder(endpoint: Endpoints.users)
-    .method(.get)
-    .build(with: customConfig)
+// For production environment with minimal logging
+let prodConfig = APIConfiguration(
+    baseURL: URL(string: "https://api.example.com")!,
+    timeoutInterval: 30,
+    defaultHeaders: ["Content-Type": "application/json"],
+    logLevel: .error  // Only log errors
+)
+
+// Configure the API based on environment
+API.configure(with: isDebug ? devConfig : prodConfig)
 ```
 
-### Caching
+## Changing Log Levels Dynamically
+
+You can change the log level after the initial configuration:
 
 ```swift
-let request = try APIRequest.Builder(endpoint: Endpoints.users)
-    .method(.get)
-    .cachePolicy(.returnCacheDataElseLoad)
-    .build()
+// Update log level dynamically
+API.setLoggingLevel(.debug)
 ```
 
-## Contributing
+This is useful when you need to temporarily increase logging verbosity to diagnose issues.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## Example Log Output
 
-## License
+Here's what to expect at different log levels:
 
-[Your License Here] 
+### Error Level (`.error`)
+
+Only errors are logged:
+
+```
+❌ ERROR [401]: https://api.example.com/login
+📥 BODY: {"error": "Invalid credentials", "message": "The username or password is incorrect"}
+```
+
+### Debug Level (`.debug`)
+
+Basic request and response information:
+
+```
+📤 REQUEST: POST https://api.example.com/login
+✅ RESPONSE [200]: https://api.example.com/login
+```
+
+### Verbose Level (`.verbose`)
+
+Detailed request and response information:
+
+```
+📤 REQUEST: POST https://api.example.com/login
+📤 HEADERS: {
+  "Content-Type": "application/json",
+  "Accept": "application/json",
+  "User-Agent": "MyApp/1.0"
+}
+📤 BODY: {
+  "email": "user@example.com",
+  "password": "************"
+}
+
+✅ RESPONSE [200]: https://api.example.com/login
+📥 HEADERS: {
+  "Content-Type": "application/json",
+  "Content-Length": "357",
+  "Server": "nginx/1.18.0"
+}
+📥 BODY: {
+  "user": {
+    "id": 123,
+    "name": "John Doe",
+    "email": "user@example.com"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+## Best Practices
+
+1. **Production Settings**: Use `.none` or `.error` in production to minimize performance impact and avoid logging sensitive information.
+
+2. **Development Settings**: Use `.debug` or `.verbose` during development to help diagnose issues.
+
+3. **Sensitive Information**: Be aware that `.verbose` logging may include sensitive information like tokens or personal data. Never use this level in production.
+
+4. **Log Filtering**: The logging system automatically masks password fields, but you should be careful with other sensitive data.
+
+5. **Conditional Logging**: Consider setting up environment-based logging:
+
+```swift
+#if DEBUG
+    API.setLoggingLevel(.verbose)
+#else
+    API.setLoggingLevel(.error)
+#endif
+```
+
+## Customizing Logging
+
+If you need to customize the logging format or destination, you can extend the `APILogger` with your own implementation:
+
+```swift
+extension APILogger {
+    static func customLogRequest(_ request: URLRequest) {
+        // Your custom logging implementation
+        // This could send logs to a file, analytics service, etc.
+    }
+}
+```
+
+## Log Rotation and Storage
+
+The built-in logger outputs to the console only and does not persist logs. If you need to store logs, consider implementing a custom logging solution that integrates with your application's logging infrastructure.
+
+## About
+
+UDFNetworking is designed to work with the [UDF Architecture](https://github.com/Maks-Jago/SwiftUI-UDF), a Redux-inspired unidirectional data flow pattern for SwiftUI applications.
