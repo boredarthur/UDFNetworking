@@ -36,6 +36,24 @@ public extension URLComponents {
         return components
     }
     
+    /// Create URL components for an API endpoint
+    /// - Parameter endpoint: The API endpoint
+    /// - Returns: URLComponents instance
+    static func forAPI(endpoint: APIEndpoint) throws -> URLComponents {
+        guard let configuration = API.configuration else {
+            throw APIError.notConfigured
+        }
+        
+        guard let string = (configuration.baseURL.absoluteString + endpoint.rawValue)
+            .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let components = URLComponents(string: string)
+        else {
+            throw APIError.invalidURL
+        }
+        
+        return components
+    }
+    
     /// Add query items to the components
     /// - Parameter items: The query items to add
     /// - Returns: Self for chaining

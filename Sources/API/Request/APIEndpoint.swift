@@ -11,11 +11,28 @@ import Foundation
 public protocol APIEndpoint {
     /// The raw endpoint path.
     var rawValue: String { get }
+    
+    /// Create a custom endpoint from a URL path
+    /// - Parameter urlPath: The URL path string
+    /// - Returns: An APIEndpoint
+    static func custom(urlPath: String) -> Self
 }
 
 /// Make String conform to APIEndpoint so strings can be used directly as endpoints.
 extension String: APIEndpoint {
     public var rawValue: String { return self }
+    
+    public static func custom(urlPath: String) -> String {
+        return urlPath
+    }
+}
+
+extension APIEndpoint {
+    /// Create URLComponents for this endpoint
+    /// - Returns: URLComponents for the endpoint
+    public func components() throws -> URLComponents {
+        return try URLComponents.forAPI(endpoint: self)
+    }
 }
 
 extension RawRepresentable where RawValue == String, Self: APIEndpoint {
@@ -53,21 +70,5 @@ public extension APIEndpoint {
     /// - Returns: The full path string.
     func fullPath(with baseURL: URL, apiPath: String = "/api") -> String {
         return baseURL.absoluteString + apiPath + rawValue
-    }
-}
-
-public extension APIEndpoint {
-    /// Create a custom endpoint from a URL path
-    /// - Parameter path: The URL path string
-    /// - Returns: An APIEndpoint
-    static func custom(urlPath: String) -> APIEndpoint {
-        return urlPath
-    }
-    
-    /// Create URLComponents for this endpoint
-    /// - Parameter queryItems: Optional query items to include
-    /// - Returns: URLComponents for the endpoint
-    func components(@URLRequest.URLQueryItemBuilder queryItems: () -> [URLQueryItem] = { [] }) throws -> URLComponents {
-        return try URLComponents.forAPI(endpoint: self, queryItems: queryItems)
     }
 }
