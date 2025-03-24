@@ -40,7 +40,7 @@ public extension BaseAPIClientProtocol {
     /// - Parameters:
     ///   - endpoint: The API endpoint.
     ///   - token: The authentication token (if any).
-    ///   - collectionKey: The key to unwrap the collection by.
+    ///   - collectionKey: The key to unwrap the collection by (if any).
     ///   - session: URLSession to use for the request (defaults to shared).
     ///   - parameters: The query parameters for GET requests.
     /// - Returns: The decoded collection.
@@ -48,7 +48,7 @@ public extension BaseAPIClientProtocol {
     static func fetchCollection<T: Decodable>(
         endpoint: APIEndpoint,
         token: String? = nil,
-        unwrapBy collectionKey: String,
+        unwrapBy collectionKey: String? = nil,
         session: URLSession = .shared,
         @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] }
     ) async throws -> [T] {
