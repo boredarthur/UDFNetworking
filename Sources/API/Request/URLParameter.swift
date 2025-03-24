@@ -13,6 +13,9 @@ public enum URLParameter: String {
     case page
     case perPage = "per_page"
     
+    static var pageCase: URLParameter { return .page }
+    static var perPageCase: URLParameter { return .perPage }
+    
     // Sorting and filtering
     case sortBy = "sort_by"
     case sortOrder = "sort_order"
