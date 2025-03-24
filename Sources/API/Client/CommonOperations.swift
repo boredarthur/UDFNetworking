@@ -105,6 +105,85 @@ public extension BaseAPIClientProtocol {
         return try await performRequest(with: request.urlRequest, unwrapBy: collectionKey, session: session)
     }
     
+    /// Fetch a paginated collection of resources.
+    /// - Parameters:
+    ///   - endpoint: The API endpoint.
+    ///   - page: The page number.
+    ///   - perPage: The number of items per page.
+    ///   - token: The authentication token (if any).
+    ///   - collectionKey: The key to unwrap the collection by.
+    ///   - session: URLSession to use for the request (defaults to shared).
+    ///   - additionalParameters: Additional query parameters for the request.
+    /// - Returns: The decoded collection.
+    /// - Throws: An error if the request fails.
+    static func fetchCollection<T: Decodable>(
+        endpoint: APIEndpoint,
+        page: Int,
+        perPage: Int = 20,
+        token: String? = nil,
+        unwrapBy collectionKey: String? = nil,
+        session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder additionalParameters: () -> [URLQueryItem] = { [] }
+    ) async throws -> [T] {
+        guard let configuration = API.configuration else {
+            throw APIError.notConfigured
+        }
+        
+        let request = try APIRequest.Builder(endpoint: endpoint)
+            .method(.get)
+            .authenticated(with: token)
+            .parameters {
+                URLQueryItem(name: configuration.pageParameterName, value: "\(page)")
+                URLQueryItem(name: configuration.perPageParameterName, value: "\(perPage)")
+                
+                additionalParameters()
+            }
+            .build(session: session)
+        
+        return try await performRequest(with: request.urlRequest, unwrapBy: collectionKey, session: session)
+    }
+    
+    /// Fetch a paginated collection of resources using URLComponents.
+    /// - Parameters:
+    ///   - components: Base URLComponents to use.
+    ///   - page: The page number.
+    ///   - perPage: The number of items per page.
+    ///   - token: The authentication token (if any).
+    ///   - collectionKey: The key to unwrap the collection by.
+    ///   - session: URLSession to use for the request (defaults to shared).
+    ///   - additionalParameters: Additional query parameters for the request.
+    /// - Returns: The decoded collection.
+    /// - Throws: An error if the request fails.
+    static func fetchCollection<T: Decodable>(
+        _ components: URLComponents,
+        page: Int,
+        perPage: Int = 20,
+        token: String? = nil,
+        unwrapBy collectionKey: String? = nil,
+        session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder additionalParameters: () -> [URLQueryItem] = { [] }
+    ) async throws -> [T] {
+        guard let configuration = API.configuration else {
+            throw APIError.notConfigured
+        }
+        
+        var paginatedComponents = components
+        paginatedComponents.addQueryItems {
+            URLQueryItem(name: configuration.pageParameterName, value: "\(page)")
+            URLQueryItem(name: configuration.perPageParameterName, value: "\(perPage)")
+            
+            // Add any additional parameters
+            additionalParameters()
+        }
+        
+        let request = try APIRequest.Builder(components: paginatedComponents)
+            .method(.get)
+            .authenticated(with: token)
+            .build(paginatedComponents, session: session)
+        
+        return try await performRequest(with: request.urlRequest, unwrapBy: collectionKey, session: session)
+    }
+    
     // MARK: - Write Operations
     
     /// Create a resource.
