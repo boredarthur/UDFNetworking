@@ -17,7 +17,7 @@ public enum HTTPMethod: String {
 }
 
 /// Common HTTP header fields used in requests.
-public enum HTTPHeaderField {
+public enum HTTPHeaderField: Hashable {
     case authorization
     case contentType
     case accept

@@ -298,7 +298,7 @@ public class APIRequest {
         /// Set parameters using a result builder.
         /// - Parameter builder: The parameter builder.
         /// - Returns: The updated builder.
-        func parameters(@ParametersBuilder builder parameters: () -> [URLQueryItem]) -> Builder {
+        public func parameters(@ParametersBuilder builder parameters: () -> [URLQueryItem]) -> Builder {
             var newBuilder = self
             
             // For GET requests, these are query parameters
