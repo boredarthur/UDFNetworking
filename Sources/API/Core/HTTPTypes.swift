@@ -17,18 +17,38 @@ public enum HTTPMethod: String {
 }
 
 /// Common HTTP header fields used in requests.
-public enum HTTPHeaderField: String {
-    case authorization = "Authorization"
-    case contentType = "Content-Type"
-    case accept = "Accept"
-    case acceptLanguage = "Accept-Language"
-    case acceptEncoding = "Accept-Encoding"
-    case userAgent = "User-Agent"
-    case cacheControl = "Cache-Control"
-    case apiKey = "Api-Key"
-    case apiVersion = "Api-Version"
-    case apiAuthorization = "Api-Authorization"
-    case languagePreferences = "X-Language-Preferences"
+public enum HTTPHeaderField {
+    case authorization
+    case contentType
+    case accept
+    case acceptLanguage
+    case acceptEncoding
+    case userAgent
+    case cacheControl
+    case apiKey
+    case apiVersion
+    case apiAuthorization
+    case languagePreferences
+    case prefer
+    case custom(String)
+    
+    public var rawValue: String {
+        switch self {
+        case .authorization: return "Authorization"
+        case .contentType: return "Content-Type"
+        case .accept: return "Accept"
+        case .acceptLanguage: return "Accept-Language"
+        case .acceptEncoding: return "Accept-Encoding"
+        case .userAgent: return "User-Agent"
+        case .cacheControl: return "Cache-Control"
+        case .apiKey: return "Api-Key"
+        case .apiVersion: return "Api-Version"
+        case .apiAuthorization: return "Api-Authorization"
+        case .languagePreferences: return "X-Language-Preferences"
+        case .prefer: return "Prefer"
+        case .custom(let name): return name
+        }
+    }
 }
 
 /// Common content types used in HTTP requests.
