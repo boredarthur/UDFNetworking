@@ -236,6 +236,28 @@ public extension BaseAPIClientProtocol {
         return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey, session: session)
     }
     
+    /// Create a resource without expecting a response body.
+    /// - Parameters:
+    ///   - endpoint: The API endpoint from this API client's endpoints.
+    ///   - token: The authentication token (if any).
+    ///   - session: URLSession to use for the request (defaults to shared).
+    ///   - parameters: The parameters for the request body in POST requests.
+    /// - Throws: An error if the request fails.
+    static func createResource(
+        endpoint: Endpoints,
+        token: String? = nil,
+        session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] }
+    ) async throws {
+        let request = try APIRequest.Builder(endpoint: endpoint)
+            .method(.post)
+            .authenticated(with: token)
+            .parameters(builder: parameters)
+            .build(session: session)
+        
+        try await performRequestWithNoResponse(with: request.urlRequest, session: session)
+    }
+    
     /// Update a resource.
     /// - Parameters:
     ///   - endpoint: The API endpoint.
