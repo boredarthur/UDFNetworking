@@ -9,6 +9,9 @@ import Foundation
 
 /// Protocol for API clients.
 public protocol BaseAPIClientProtocol {
+    /// The endpoint type associated with this API client
+    associatedtype Endpoints: APIEndpoint
+    
     /// Perform a request that returns a decodable model.
     /// - Parameters:
     ///   - request: The URL request.

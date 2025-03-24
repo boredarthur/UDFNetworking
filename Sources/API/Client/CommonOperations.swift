@@ -21,7 +21,7 @@ public extension BaseAPIClientProtocol {
     /// - Returns: The decoded resource.
     /// - Throws: An error if the request fails.
     static func fetchResource<T: Decodable>(
-        endpoint: APIEndpoint,
+        endpoint: Endpoints,
         token: String? = nil,
         unwrapBy resourceKey: String? = nil,
         session: URLSession = .shared,
@@ -68,7 +68,7 @@ public extension BaseAPIClientProtocol {
     /// - Returns: The decoded collection.
     /// - Throws: An error if the request fails.
     static func fetchCollection<T: Decodable>(
-        endpoint: APIEndpoint,
+        endpoint: Endpoints,
         token: String? = nil,
         unwrapBy collectionKey: String? = nil,
         session: URLSession = .shared,
@@ -117,7 +117,7 @@ public extension BaseAPIClientProtocol {
     /// - Returns: The decoded collection.
     /// - Throws: An error if the request fails.
     static func fetchCollection<T: Decodable>(
-        endpoint: APIEndpoint,
+        endpoint: Endpoints,
         page: Int,
         perPage: Int = 20,
         token: String? = nil,
@@ -196,7 +196,7 @@ public extension BaseAPIClientProtocol {
     /// - Returns: The created resource.
     /// - Throws: An error if the request fails.
     static func createResource<T: Decodable>(
-        endpoint: APIEndpoint,
+        endpoint: Endpoints,
         token: String? = nil,
         unwrapBy resourceKey: String? = nil,
         session: URLSession = .shared,
@@ -246,7 +246,7 @@ public extension BaseAPIClientProtocol {
     /// - Returns: The updated resource.
     /// - Throws: An error if the request fails.
     static func updateResource<T: Decodable>(
-        endpoint: APIEndpoint,
+        endpoint: Endpoints,
         token: String? = nil,
         unwrapBy resourceKey: String? = nil,
         session: URLSession = .shared,
@@ -296,7 +296,7 @@ public extension BaseAPIClientProtocol {
     /// - Returns: The patched resource.
     /// - Throws: An error if the request fails.
     static func patchResource<T: Decodable>(
-        endpoint: APIEndpoint,
+        endpoint: Endpoints,
         token: String? = nil,
         unwrapBy resourceKey: String? = nil,
         session: URLSession = .shared,
@@ -344,7 +344,7 @@ public extension BaseAPIClientProtocol {
     ///   - parameters: Optional parameters for DELETE requests.
     /// - Throws: An error if the request fails.
     static func deleteResource(
-        endpoint: APIEndpoint,
+        endpoint: Endpoints,
         token: String? = nil,
         session: URLSession = .shared,
         @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] }
