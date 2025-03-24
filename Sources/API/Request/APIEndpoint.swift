@@ -11,20 +11,11 @@ import Foundation
 public protocol APIEndpoint {
     /// The raw endpoint path.
     var rawValue: String { get }
-    
-    /// Create a custom endpoint from a URL path
-    /// - Parameter urlPath: The URL path string
-    /// - Returns: An APIEndpoint
-    static func custom(urlPath: String) -> Self
 }
 
 /// Make String conform to APIEndpoint so strings can be used directly as endpoints.
 extension String: APIEndpoint {
     public var rawValue: String { return self }
-    
-    public static func custom(urlPath: String) -> String {
-        return urlPath
-    }
 }
 
 extension APIEndpoint {
