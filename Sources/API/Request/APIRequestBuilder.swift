@@ -86,6 +86,41 @@ public class APIRequest {
             self.endpoint = endpoint.rawValue
         }
         
+        /// Initialize a builder with URLComponents
+        /// - Parameter components: The URLComponents to use for the request
+        public init(components: URLComponents) throws {
+            guard let url = components.url else {
+                throw APIError.invalidURL
+            }
+            
+            // Extract the path from the URL
+            // If using a base URL, we need to remove it from the path
+            if let configuration = API.configuration {
+                let baseURLString = configuration.baseURL.absoluteString
+                let urlString = url.absoluteString
+                
+                if urlString.hasPrefix(baseURLString) {
+                    // If URL starts with baseURL, extract just the endpoint part
+                    let endpoint = String(urlString.dropFirst(baseURLString.count))
+                    self.init(endpoint: endpoint)
+                } else {
+                    // Otherwise, use the full URL as a custom endpoint
+                    self.init(endpoint: urlString as APIEndpoint)
+                }
+            } else {
+                // If API isn't configured, use the full URL
+                self.init(endpoint: url.absoluteString as APIEndpoint)
+            }
+            
+            // If components have query items, add them as parameters
+            if let queryItems = components.queryItems, !queryItems.isEmpty {
+                // Use the parameters method to add query items
+                _ = self.parameters {
+                    queryItems
+                }
+            }
+        }
+        
         /// Set the HTTP method.
         /// - Parameter method: The HTTP method.
         /// - Returns: The updated builder.
@@ -366,6 +401,53 @@ public class APIRequest {
                     } catch {
                         throw APIError.invalidBody
                     }
+                }
+            }
+            
+            return RequestContainer(urlRequest: request, session: session)
+        }
+        
+        /// Build a request directly from URLComponents
+        /// - Parameters:
+        ///   - components: The URLComponents to use
+        ///   - session: The URLSession to use for making requests
+        /// - Returns: The request container
+        /// - Throws: An error if the build fails
+        public func build(_ components: URLComponents, session: URLSession = .shared) throws -> RequestContainer {
+            guard let url = components.url else {
+                throw APIError.invalidURL
+            }
+            
+            var request = URLRequest(
+                url: url,
+                cachePolicy: cachePolicy,
+                timeoutInterval: timeoutInterval ?? API.configuration?.timeoutInterval ?? 30
+            )
+            request.httpMethod = method.rawValue
+            
+            if let defaultHeaders = API.configuration?.defaultHeaders {
+                for (key, value) in defaultHeaders {
+                    request.setValue(value, forHTTPHeaderField: key)
+                }
+            }
+            
+            // Add custom headers
+            for (field, value) in headers {
+                request.setValue(value, forHTTPHeaderField: field.rawValue)
+            }
+            
+            // Handle body for non-GET requests
+            if method != .get && !bodyParameters.isEmpty {
+                do {
+                    let jsonData = try JSONSerialization.data(withJSONObject: bodyParameters)
+                    request.httpBody = jsonData
+                    
+                    // Ensure content-type is set to application/json
+                    if request.value(forHTTPHeaderField: "Content-Type") == nil {
+                        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    }
+                } catch {
+                    throw APIError.invalidBody
                 }
             }
             

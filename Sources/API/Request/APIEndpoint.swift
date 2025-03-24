@@ -55,3 +55,19 @@ public extension APIEndpoint {
         return baseURL.absoluteString + apiPath + rawValue
     }
 }
+
+extension APIEndpoint {
+    /// Create a custom endpoint from a URL path
+    /// - Parameter path: The URL path string
+    /// - Returns: An APIEndpoint
+    static func custom(urlPath: String) -> APIEndpoint {
+        return urlPath
+    }
+    
+    /// Create URLComponents for this endpoint
+    /// - Parameter queryItems: Optional query items to include
+    /// - Returns: URLComponents for the endpoint
+    func components(@URLRequest.URLQueryItemBuilder queryItems: () -> [URLQueryItem] = { [] }) throws -> URLComponents {
+        return try URLComponents.forAPI(endpoint: self, queryItems: queryItems)
+    }
+}
