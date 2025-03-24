@@ -82,3 +82,22 @@ public extension URLParameter {
         return URLQueryItem(name: self.rawValue, value: String(value))
     }
 }
+
+// Extension for pagination
+public extension URLParameter {
+    /// Create a page query item with the configuration's page parameter name.
+    /// - Parameter value: The page number.
+    /// - Returns: A URLQueryItem for the page parameter.
+    static func page(_ value: Int) -> URLQueryItem {
+        let paramName = API.configuration?.pageParameterName ?? URLParameter.page.rawValue
+        return URLQueryItem(name: paramName, value: String(value))
+    }
+    
+    /// Create a per page query item with the configuration's per page parameter name.
+    /// - Parameter value: The number of items per page.
+    /// - Returns: A URLQueryItem for the per page parameter.
+    static func perPage(_ value: Int) -> URLQueryItem {
+        let paramName = API.configuration?.perPageParameterName ?? URLParameter.perPage.rawValue
+        return URLQueryItem(name: paramName, value: String(value))
+    }
+}

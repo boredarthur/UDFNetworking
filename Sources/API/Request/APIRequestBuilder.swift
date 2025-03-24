@@ -327,8 +327,12 @@ public class APIRequest {
         /// - Returns: The updated builder.
         public func paged(page: Int, perPage: Int = 20) -> Builder {
             return parameters {
-                URLParameter.page.queryItem(page)
-                URLParameter.perPage.queryItem(perPage)
+                let config = API.configuration
+                let pageParam = config?.pageParameterName ?? URLParameter.page.rawValue
+                let perPageParam = config?.perPageParameterName ?? URLParameter.perPage.rawValue
+                
+                URLQueryItem(name: pageParam, value: "\(page)")
+                URLQueryItem(name: perPageParam, value: "\(perPage)")
             }
         }
         

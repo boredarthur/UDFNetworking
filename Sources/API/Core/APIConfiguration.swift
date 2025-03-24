@@ -27,6 +27,12 @@ public protocol APIConfigurationProtocol {
     /// Logging level for API requests and responses.
     var logLevel: APILogger.LogLevel { get }
     
+    /// The name of the page parameter for pagination.
+    var pageParameterName: String { get }
+    
+    /// The name of the per page parameter for pagination.
+    var perPageParameterName: String { get }
+    
     /// Get a custom value from the configuration.
     /// - Parameter key: The key for the stored value.
     /// - Returns: The stored value, or nil if not found.
@@ -59,6 +65,12 @@ public class APIConfiguration: APIConfigurationProtocol {
     /// Logging level for API requests and responses.
     public var logLevel: APILogger.LogLevel
     
+    /// The name of the page parameter for pagination.
+    public var pageParameterName: String
+    
+    /// The name of the per page parameter for pagination.
+    public var perPageParameterName: String
+    
     /// Dictionary to store custom configuration values.
     private var customProperties: [String: Any] = [:]
     
@@ -76,7 +88,9 @@ public class APIConfiguration: APIConfigurationProtocol {
         mediaCDNURL: URL? = nil,
         timeoutInterval: TimeInterval = 30,
         defaultHeaders: [String: String] = ["Content-Type": "application/json"],
-        logLevel: APILogger.LogLevel = .error
+        logLevel: APILogger.LogLevel = .error,
+        pageParameterName: String = URLParameter.page.rawValue,
+        perPageParameterName: String = URLParameter.perPage.rawValue
     ) {
         self.baseURL = baseURL
         self.cdnURL = cdnURL
@@ -84,6 +98,8 @@ public class APIConfiguration: APIConfigurationProtocol {
         self.timeoutInterval = timeoutInterval
         self.defaultHeaders = defaultHeaders
         self.logLevel = logLevel
+        self.pageParameterName = pageParameterName
+        self.perPageParameterName = perPageParameterName
     }
     
     /// Get a custom value from the configuration.
