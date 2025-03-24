@@ -56,7 +56,7 @@ public extension APIEndpoint {
     }
 }
 
-extension APIEndpoint {
+public extension APIEndpoint {
     /// Create a custom endpoint from a URL path
     /// - Parameter path: The URL path string
     /// - Returns: An APIEndpoint
