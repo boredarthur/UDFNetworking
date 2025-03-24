@@ -10,11 +10,8 @@ import Foundation
 /// Standard URL parameters for API requests.
 public enum URLParameter: String {
     // Pagination parameters
-    case page
-    case perPage = "per_page"
-    
-    static var pageCase: URLParameter { return .page }
-    static var perPageCase: URLParameter { return .perPage }
+    case _page
+    case _perPage = "per_page"
     
     // Sorting and filtering
     case sortBy = "sort_by"
@@ -92,7 +89,7 @@ public extension URLParameter {
     /// - Parameter value: The page number.
     /// - Returns: A URLQueryItem for the page parameter.
     static func page(_ value: Int) -> URLQueryItem {
-        let paramName = API.configuration?.pageParameterName ?? URLParameter.page.rawValue
+        let paramName = API.configuration?.pageParameterName ?? URLParameter._page.rawValue
         return URLQueryItem(name: paramName, value: String(value))
     }
     
@@ -100,7 +97,7 @@ public extension URLParameter {
     /// - Parameter value: The number of items per page.
     /// - Returns: A URLQueryItem for the per page parameter.
     static func perPage(_ value: Int) -> URLQueryItem {
-        let paramName = API.configuration?.perPageParameterName ?? URLParameter.perPage.rawValue
+        let paramName = API.configuration?.perPageParameterName ?? URLParameter._perPage.rawValue
         return URLQueryItem(name: paramName, value: String(value))
     }
 }
