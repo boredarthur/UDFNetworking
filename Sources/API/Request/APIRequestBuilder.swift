@@ -80,6 +80,9 @@ public class APIRequest {
         /// The timeout interval.
         private var timeoutInterval: TimeInterval?
         
+        /// Custom data for the body.
+        private var customBody: Data?
+        
         /// Initialize a builder with an endpoint.
         /// - Parameter endpoint: The API endpoint.
         public init(endpoint: APIEndpoint) {
@@ -146,6 +149,25 @@ public class APIRequest {
             var builder = self
             builder.timeoutInterval = interval
             return builder
+        }
+        
+        public func jsonBody<T: Encodable>(_ object: T, encoder: JSONEncoder = JSONEncoder()) -> Builder {
+            var newBuilder = self
+            
+            do {
+                // Encode the object to JSON data
+                let jsonData = try encoder.encode(object)
+                
+                // Store the JSON data to be set as the httpBody when building
+                newBuilder.customBody = jsonData
+                
+                // Ensure content-type is set to application/json
+                return newBuilder.headers {
+                    HeaderItem(.contentType, "application/json")
+                }
+            } catch {
+                return self
+            }
         }
         
         // MARK: - Header Builders
@@ -391,7 +413,9 @@ public class APIRequest {
             }
             
             // Handle body for non-GET requests
-            if method != .get {
+            if let customBody {
+                request.httpBody = customBody
+            } else if method != .get {
                 // Process bodyParameters for non-GET requests
                 if !bodyParameters.isEmpty {
                     do {
