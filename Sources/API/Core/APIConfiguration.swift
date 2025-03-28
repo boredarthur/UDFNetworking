@@ -76,14 +76,14 @@ public class APIConfiguration: APIConfigurationProtocol {
     
     /// Initialize a new APIConfiguration.
     /// - Parameters:
-    ///   - baseURL: Base URL for the API server.
+    ///   - baseURL:Base URL for the API server. If nil, a fatal error will be triggered.
     ///   - cdnURL: Base URL for the CDN (optional).
     ///   - mediaCDNURL: Base URL for the media CDN (optional).
     ///   - timeoutInterval: Timeout interval for network requests.
     ///   - defaultHeaders: Default headers to include in every request.
     ///   - logLevel: Logging level for API requests and responses.
     public init(
-        baseURL: URL,
+        baseURL: URL?,
         cdnURL: URL? = nil,
         mediaCDNURL: URL? = nil,
         timeoutInterval: TimeInterval = 30,
@@ -92,6 +92,10 @@ public class APIConfiguration: APIConfigurationProtocol {
         pageParameterName: String = URLParameter.page.rawValue,
         perPageParameterName: String = URLParameter.perPage.rawValue
     ) {
+        guard let baseURL = baseURL else {
+            fatalError("baseURL cannot be nil when initializing APIConfiguration")
+        }
+        
         self.baseURL = baseURL
         self.cdnURL = cdnURL
         self.mediaCDNURL = mediaCDNURL
