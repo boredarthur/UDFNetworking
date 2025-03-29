@@ -528,7 +528,13 @@ public class APIRequest {
         /// - Returns: The request container
         /// - Throws: An error if the build fails
         public func build(_ components: URLComponents, session: URLSession = .shared) throws -> RequestContainer {
-            guard let url = components.url else {
+            var mutableComponents = components
+            
+            if !queryItems.isEmpty && (method == .get || method == .delete) {
+                mutableComponents.queryItems = queryItems
+            }
+            
+            guard let url = mutableComponents.url else {
                 throw APIError.invalidURL
             }
             
