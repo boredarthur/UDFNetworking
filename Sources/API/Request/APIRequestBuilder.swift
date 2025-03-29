@@ -381,7 +381,7 @@ public class APIRequest {
             var newBuilder = self
             
             // For GET requests, these are query parameters
-            if method == .get {
+            if method == .get || method == .delete {
                 newBuilder.queryItems = parameters()
                 return newBuilder
             }
