@@ -256,7 +256,15 @@ public class APIRequest {
         /// - Returns: The updated builder.
         public func headers(@HeadersBuilder builder: () -> [HTTPHeaderField: String]) -> Builder {
             var newBuilder = self
-            newBuilder.headers = builder()
+            
+            let newHeaders = builder()
+            
+            var mergedHeaders = newBuilder.headers
+            for (key, value) in newHeaders {
+                mergedHeaders[key] = value
+            }
+            
+            newBuilder.headers = mergedHeaders
             return newBuilder
         }
         
@@ -380,7 +388,14 @@ public class APIRequest {
         /// - Returns: The updated builder.
         public func authenticated(with token: String?) -> Builder {
             guard let token = token, !token.isEmpty else { return self }
-            return headers { HeaderItem(.authorization, token) }
+            
+            var newBuilder = self
+            
+            var updatedHeaders = newBuilder.headers
+            updatedHeaders[.authorization] = token
+            newBuilder.headers = updatedHeaders
+            
+            return newBuilder
         }
         
         /// Add pagination parameters to the request.
