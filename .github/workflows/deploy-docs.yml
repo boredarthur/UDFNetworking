@@ -33,11 +33,14 @@ jobs:
             --transform-for-static-hosting \
             --hosting-base-path UDFNetworking \
             --output-path ./docs
+          
+          # Ensure docs directory exists
+          mkdir -p ./docs
       
-      - name: Upload Pages Artifact
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          path: './docs'
+          path: ./docs
 
   deploy:
     environment:
@@ -48,4 +51,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v1
