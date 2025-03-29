@@ -551,7 +551,9 @@ public class APIRequest {
             }
             
             // Handle body for non-GET requests
-            if method != .get && !bodyParameters.isEmpty {
+            if let customBody {
+                request.httpBody = customBody
+            } else if method != .get && !bodyParameters.isEmpty {
                 do {
                     let jsonData = try JSONSerialization.data(withJSONObject: bodyParameters)
                     request.httpBody = jsonData
