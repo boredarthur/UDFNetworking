@@ -266,6 +266,38 @@ public extension BaseAPIClientProtocol {
         return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey, session: session)
     }
     
+    /// Create a resource using URLComponents
+    /// - Parameters:
+    ///   - components: The URLComponents to use
+    ///   - bodyData: The raw data to include in the request body.
+    ///   - token: The authentication token (if any)
+    ///   - resourceKey: The key to unwrap the response by (if any)
+    ///   - bodyParameters: The body parameters builder
+    ///   - session: URLSession to use for the request
+    ///   - parameters: The parameters for the request body in POST requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
+    /// - Returns: The created resource
+    /// - Throws: An error if the request fails
+    static func createResource<T: Decodable>(
+        _ components: URLComponents,
+        bodyData: Data,
+        token: String? = nil,
+        unwrapBy resourceKey: String? = nil,
+        session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
+    ) async throws -> T {
+        let request = try APIRequest.Builder(components: components)
+            .method(.post)
+            .jsonBody(bodyData)
+            .authenticated(with: token)
+            .parameters(builder: parameters)
+            .headers(builder: additionalHeaders)
+            .build(components, session: session)
+        
+        return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey, session: session)
+    }
+    
     /// Patch a resource.
     /// - Parameters:
     ///   - endpoint: The API endpoint.
@@ -387,6 +419,37 @@ public extension BaseAPIClientProtocol {
         return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey)
     }
     
+    /// Update a resource.
+    /// - Parameters:
+    ///   - endpoint: The API endpoint.
+    ///   - bodyData: The raw data to include in the request body.
+    ///   - token: The authentication token (if any).
+    ///   - resourceKey: The key to unwrap the response by (if any).
+    ///   - session: URLSession to use for the request (defaults to shared).
+    ///   - parameters: The parameters for the request body in PUT requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
+    /// - Returns: The updated resource.
+    /// - Throws: An error if the request fails.
+    static func updateResource<T: Decodable>(
+        endpoint: Endpoints,
+        bodyData: Data,
+        token: String? = nil,
+        unwrapBy resourceKey: String? = nil,
+        session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
+    ) async throws -> T {
+        let request = try APIRequest.Builder(endpoint: endpoint)
+            .method(.put)
+            .jsonBody(bodyData)
+            .authenticated(with: token)
+            .parameters(builder:parameters)
+            .headers(builder: additionalHeaders)
+            .build()
+        
+        return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey)
+    }
+    
     /// Update a resource using URLComponents
     /// - Parameters:
     ///   - components: The URLComponents to use
@@ -407,6 +470,37 @@ public extension BaseAPIClientProtocol {
     ) async throws -> T {
         let request = try APIRequest.Builder(components: components)
             .method(.put)
+            .authenticated(with: token)
+            .parameters(builder: parameters)
+            .headers(builder: additionalHeaders)
+            .build(components, session: session)
+        
+        return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey, session: session)
+    }
+    
+    /// Update a resource using URLComponents
+    /// - Parameters:
+    ///   - components: The URLComponents to use
+    ///   - bodyData: The raw data to include in the request body.
+    ///   - token: The authentication token (if any)
+    ///   - resourceKey: The key to unwrap the response by (if any)
+    ///   - session: URLSession to use for the request
+    ///   - parameters: The body parameters builder
+    ///   - additionalHeaders: Additional headers to include in the request.
+    /// - Returns: The updated resource
+    /// - Throws: An error if the request fails
+    static func updateResource<T: Decodable>(
+        _ components: URLComponents,
+        bodyData: Data,
+        token: String? = nil,
+        unwrapBy resourceKey: String? = nil,
+        session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
+    ) async throws -> T {
+        let request = try APIRequest.Builder(components: components)
+            .method(.put)
+            .jsonBody(bodyData)
             .authenticated(with: token)
             .parameters(builder: parameters)
             .headers(builder: additionalHeaders)
@@ -474,6 +568,37 @@ public extension BaseAPIClientProtocol {
         return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey, session: session)
     }
     
+    /// Patch a resource using URLComponents
+    /// - Parameters:
+    ///   - components: The URLComponents to use
+    ///   - bodyData: The raw data to include in the request body.
+    ///   - token: The authentication token (if any)
+    ///   - resourceKey: The key to unwrap the response by (if any)
+    ///   - session: URLSession to use for the request
+    ///   - parameters: The body parameters builder
+    ///   - additionalHeaders: Additional headers to include in the request.
+    /// - Returns: The patched resource
+    /// - Throws: An error if the request fails
+    static func patchResource<T: Decodable>(
+        _ components: URLComponents,
+        bodyData: Data,
+        token: String? = nil,
+        unwrapBy resourceKey: String? = nil,
+        session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
+    ) async throws -> T {
+        let request = try APIRequest.Builder(components: components)
+            .method(.patch)
+            .jsonBody(bodyData)
+            .authenticated(with: token)
+            .parameters(builder: parameters)
+            .headers(builder: additionalHeaders)
+            .build(components, session: session)
+        
+        return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey, session: session)
+    }
+    
     /// Delete a resource.
     /// - Parameters:
     ///   - endpoint: The API endpoint.
@@ -499,6 +624,34 @@ public extension BaseAPIClientProtocol {
         try await performRequestWithNoResponse(with: request.urlRequest)
     }
     
+    /// Delete a resource.
+    /// - Parameters:
+    ///   - endpoint: The API endpoint.
+    ///   - bodyData: The raw data to include in the request body.
+    ///   - token: The authentication token (if any).
+    ///   - session: URLSession to use for the request (defaults to shared).
+    ///   - parameters: Optional parameters for DELETE requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
+    /// - Throws: An error if the request fails.
+    static func deleteResource(
+        endpoint: Endpoints,
+        bodyData: Data,
+        token: String? = nil,
+        session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
+    ) async throws {
+        let request = try APIRequest.Builder(endpoint: endpoint)
+            .method(.delete)
+            .jsonBody(bodyData)
+            .authenticated(with: token)
+            .parameters(builder: parameters)
+            .headers(builder: additionalHeaders)
+            .build()
+        
+        try await performRequestWithNoResponse(with: request.urlRequest)
+    }
+    
     /// Delete a resource using URLComponents
     /// - Parameters:
     ///   - components: The URLComponents to use
@@ -516,6 +669,34 @@ public extension BaseAPIClientProtocol {
     ) async throws {
         let request = try APIRequest.Builder(components: components)
             .method(.delete)
+            .authenticated(with: token)
+            .parameters(builder: parameters)
+            .headers(builder: additionalHeaders)
+            .build(components, session: session)
+        
+        try await performRequestWithNoResponse(with: request.urlRequest, session: session)
+    }
+    
+    /// Delete a resource using URLComponents
+    /// - Parameters:
+    ///   - components: The URLComponents to use
+    ///   - bodyData: The raw data to include in the request body.
+    ///   - token: The authentication token (if any)
+    ///   - session: URLSession to use for the request
+    ///   - parameters: Optional parameters for DELETE requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
+    /// - Throws: An error if the request fails
+    static func deleteResource(
+        _ components: URLComponents,
+        bodyData: Data,
+        token: String? = nil,
+        session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
+    ) async throws {
+        let request = try APIRequest.Builder(components: components)
+            .method(.delete)
+            .jsonBody(bodyData)
             .authenticated(with: token)
             .parameters(builder: parameters)
             .headers(builder: additionalHeaders)
