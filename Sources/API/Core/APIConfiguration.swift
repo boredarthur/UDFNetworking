@@ -152,10 +152,7 @@ public class APIConfiguration: APIConfigurationProtocol {
     /// - Parameter key: The string key for the stored value.
     /// - Returns: The stored value, or nil if not found.
     public func getValue<T>(forKey key: String) -> T? {
-        if let configKey = ConfigurationKey(rawValue: key) {
-            return getValue(forKey: configKey)
-        }
-        return nil
+        return getValue(forKey: ConfigurationKey(rawValue: key))
     }
     
     /// Set a custom value in the configuration using a string key (backward compatibility).
@@ -163,9 +160,7 @@ public class APIConfiguration: APIConfigurationProtocol {
     ///   - value: The value to store.
     ///   - key: The string key for the stored value.
     public func setValue<T>(_ value: T, forKey key: String) {
-        if let configKey = ConfigurationKey(rawValue: key) {
-            setValue(value, forKey: configKey)
-        }
+        setValue(value, forKey: ConfigurationKey(rawValue: key))
     }
     
     /// Get a custom value from the API configuration.
@@ -220,20 +215,14 @@ public class APIConfiguration: APIConfigurationProtocol {
     /// - Parameter key: The string key for the stored value.
     /// - Returns: The stored value, or nil if not found.
     static func getCustomValue<T>(forKey key: String) -> T? {
-        if let configKey = ConfigurationKey(rawValue: key) {
-            return getCustomValue(forKey: configKey)
-        }
-        return nil
+        return getCustomValue(forKey: ConfigurationKey(rawValue: key))
     }
     
     /// Get a custom string value from the API configuration using a string key.
     /// - Parameter key: The string key for the stored value.
     /// - Returns: The stored string value, or nil if not found.
     static func getCustomString(forKey key: String) -> String? {
-        if let configKey = ConfigurationKey(rawValue: key) {
-            return getCustomString(forKey: configKey)
-        }
-        return nil
+        return getCustomString(forKey: ConfigurationKey(rawValue: key))
     }
 }
 
