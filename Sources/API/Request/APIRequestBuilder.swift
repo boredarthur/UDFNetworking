@@ -151,11 +151,45 @@ public class APIRequest {
             return builder
         }
         
-        public func jsonBody<T: Encodable>(_ object: T, encoder: JSONEncoder = JSONEncoder()) -> Builder {
+        /// Adds a JSON body to the request, handling different input types intelligently.
+        ///
+        /// This method can accept different types of inputs:
+        /// - Encodable objects (will be encoded to JSON)
+        /// - Data objects (if already JSON-serialized data)
+        /// - Dictionaries and arrays (will be serialized to JSON)
+        ///
+        /// - Parameters:
+        ///   - object: The object to use as the request body. Can be an `Encodable` object, pre-serialized JSON `Data`, 
+        ///             a dictionary `[String: Any]`, or an array `[Any]`.
+        ///   - encoder: The JSON encoder to use for encoding `Encodable` objects. Defaults to a standard encoder.
+        ///
+        /// - Returns: A new builder instance with the JSON body and appropriate Content-Type header added.
+        ///
+        /// - Note: If the provided data is already serialized JSON, it will be used directly without re-encoding.
+        ///         If the object cannot be converted to valid JSON, the original builder will be returned unchanged.
+        public func jsonBody<T>(_ object: T, encoder: JSONEncoder = JSONEncoder()) -> Builder {
             var newBuilder = self
             
             do {
-                let jsonData = try encoder.encode(object)
+                let jsonData: Data
+                
+                if let dataObject = object as? Data {
+                    if (try? JSONSerialization.jsonObject(with: dataObject, options: [])) != nil {
+                        jsonData = dataObject
+                    } else {
+                        jsonData = try encoder.encode(dataObject)
+                    }
+                } else if let encodableObject = object as? Encodable {
+                    jsonData = try encoder.encode(encodableObject)
+                } else {
+                    if let dictionary = object as? [String: Any] {
+                        jsonData = try JSONSerialization.data(withJSONObject: dictionary)
+                    } else if let array = object as? [Any] {
+                        jsonData = try JSONSerialization.data(withJSONObject: array)
+                    } else {
+                        return self
+                    }
+                }
                 
                 newBuilder.customBody = jsonData
                 
