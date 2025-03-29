@@ -174,11 +174,7 @@ public class APIRequest {
                 let jsonData: Data
                 
                 if let dataObject = object as? Data {
-                    if (try? JSONSerialization.jsonObject(with: dataObject, options: [])) != nil {
-                        jsonData = dataObject
-                    } else {
-                        jsonData = try encoder.encode(dataObject)
-                    }
+                    jsonData = dataObject
                 } else if let encodableObject = object as? Encodable {
                     jsonData = try encoder.encode(encodableObject)
                 } else {
