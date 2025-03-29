@@ -25,12 +25,14 @@ public extension BaseAPIClientProtocol {
         token: String? = nil,
         unwrapBy resourceKey: String? = nil,
         session: URLSession = .shared,
-        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] }
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> T {
         let request = try APIRequest.Builder(endpoint: endpoint)
             .method(.get)
             .authenticated(with: token)
             .parameters(builder: parameters)
+            .headers(builder: additionalHeaders)
             .build()
         
         return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey)
@@ -48,11 +50,13 @@ public extension BaseAPIClientProtocol {
         _ components: URLComponents,
         token: String? = nil,
         unwrapBy resourceKey: String? = nil,
-        session: URLSession = .shared
+        session: URLSession = .shared,
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> T {
         let request = try APIRequest.Builder(components: components)
             .method(.get)
             .authenticated(with: token)
+            .headers(builder: additionalHeaders)
             .build(components, session: session)
         
         return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey, session: session)
@@ -72,12 +76,14 @@ public extension BaseAPIClientProtocol {
         token: String? = nil,
         unwrapBy collectionKey: String? = nil,
         session: URLSession = .shared,
-        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] }
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> [T] {
         let request = try APIRequest.Builder(endpoint: endpoint)
             .method(.get)
             .authenticated(with: token)
             .parameters(builder: parameters)
+            .headers(builder: additionalHeaders)
             .build()
         
         return try await performRequest(with: request.urlRequest, unwrapBy: collectionKey)
@@ -95,11 +101,13 @@ public extension BaseAPIClientProtocol {
         components: URLComponents,
         token: String? = nil,
         unwrapBy collectionKey: String? = nil,
-        session: URLSession = .shared
+        session: URLSession = .shared,
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> [T] {
         let request = try APIRequest.Builder(components: components)
             .method(.get)
             .authenticated(with: token)
+            .headers(builder: additionalHeaders)
             .build(components, session: session)
         
         return try await performRequest(with: request.urlRequest, unwrapBy: collectionKey, session: session)
@@ -123,7 +131,8 @@ public extension BaseAPIClientProtocol {
         token: String? = nil,
         unwrapBy collectionKey: String? = nil,
         session: URLSession = .shared,
-        @APIRequest.Builder.ParametersBuilder additionalParameters: () -> [URLQueryItem] = { [] }
+        @APIRequest.Builder.ParametersBuilder additionalParameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> [T] {
         guard let configuration = API.configuration else {
             throw APIError.notConfigured
@@ -138,6 +147,7 @@ public extension BaseAPIClientProtocol {
                 
                 additionalParameters()
             }
+            .headers(builder: additionalHeaders)
             .build(session: session)
         
         return try await performRequest(with: request.urlRequest, unwrapBy: collectionKey, session: session)
@@ -161,7 +171,8 @@ public extension BaseAPIClientProtocol {
         token: String? = nil,
         unwrapBy collectionKey: String? = nil,
         session: URLSession = .shared,
-        @APIRequest.Builder.ParametersBuilder additionalParameters: () -> [URLQueryItem] = { [] }
+        @APIRequest.Builder.ParametersBuilder additionalParameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> [T] {
         guard let configuration = API.configuration else {
             throw APIError.notConfigured
@@ -179,6 +190,7 @@ public extension BaseAPIClientProtocol {
         let request = try APIRequest.Builder(components: paginatedComponents)
             .method(.get)
             .authenticated(with: token)
+            .headers(builder: additionalHeaders)
             .build(paginatedComponents, session: session)
         
         return try await performRequest(with: request.urlRequest, unwrapBy: collectionKey, session: session)
@@ -200,12 +212,14 @@ public extension BaseAPIClientProtocol {
         token: String? = nil,
         unwrapBy resourceKey: String? = nil,
         session: URLSession = .shared,
-        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] }
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> T {
         let request = try APIRequest.Builder(endpoint: endpoint)
             .method(.post)
             .authenticated(with: token)
             .parameters(builder: parameters)
+            .headers(builder: additionalHeaders)
             .build()
         
         return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey)
@@ -224,16 +238,57 @@ public extension BaseAPIClientProtocol {
         _ components: URLComponents,
         token: String? = nil,
         unwrapBy resourceKey: String? = nil,
-        @APIRequest.Builder.ParametersBuilder bodyParameters: () -> [URLQueryItem] = { [] },
-        session: URLSession = .shared
+        session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> T {
         let request = try APIRequest.Builder(components: components)
             .method(.post)
             .authenticated(with: token)
-            .parameters(builder: bodyParameters)
+            .parameters(builder: parameters)
+            .headers(builder: additionalHeaders)
             .build(components, session: session)
         
         return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey, session: session)
+    }
+    
+    /// Create a resource with custom binary data in the request body.
+    /// - Parameters:
+    ///   - endpoint: The API endpoint.
+    ///   - bodyData: The raw data to include in the request body.
+    ///   - contentType: The content type of the body data (defaults to "application/octet-stream").
+    ///   - token: The authentication token (if any).
+    ///   - unwrapBy: The key to unwrap the response by (if any).
+    ///   - session: URLSession to use for the request (defaults to shared).
+    ///   - additionalHeaders: Additional headers to include in the request.
+    /// - Returns: The created resource.
+    /// - Throws: An error if the request fails.
+    static func createResource<T: Decodable>(
+        endpoint: Endpoints,
+        bodyData: Data,
+        contentType: String = "application/octet-stream",
+        token: String? = nil,
+        unwrapBy: String? = nil,
+        session: URLSession = .shared,
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
+    ) async throws -> T {
+        let requestBuilder = APIRequest.Builder(endpoint: endpoint)
+            .method(.post)
+            .authenticated(with: token)
+            .headers {
+                HeaderItem(.contentType, contentType)
+                
+                additionalHeaders().map { (field, value) in
+                    HeaderItem(field, value)
+                }
+            }
+        
+        let requestContainer = try requestBuilder.build(session: session)
+        
+        var urlRequest = requestContainer.urlRequest
+        urlRequest.httpBody = bodyData
+        
+        return try await performRequest(with: urlRequest, unwrapBy: unwrapBy, session: session)
     }
     
     /// Create a resource without expecting a response body.
@@ -247,12 +302,14 @@ public extension BaseAPIClientProtocol {
         endpoint: Endpoints,
         token: String? = nil,
         session: URLSession = .shared,
-        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] }
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws {
         let request = try APIRequest.Builder(endpoint: endpoint)
             .method(.post)
             .authenticated(with: token)
             .parameters(builder: parameters)
+            .headers(builder: additionalHeaders)
             .build(session: session)
         
         try await performRequestWithNoResponse(with: request.urlRequest, session: session)
@@ -272,12 +329,14 @@ public extension BaseAPIClientProtocol {
         token: String? = nil,
         unwrapBy resourceKey: String? = nil,
         session: URLSession = .shared,
-        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] }
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> T {
         let request = try APIRequest.Builder(endpoint: endpoint)
             .method(.put)
             .authenticated(with: token)
             .parameters(builder:parameters)
+            .headers(builder: additionalHeaders)
             .build()
         
         return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey)
@@ -288,7 +347,7 @@ public extension BaseAPIClientProtocol {
     ///   - components: The URLComponents to use
     ///   - token: The authentication token (if any)
     ///   - resourceKey: The key to unwrap the response by (if any)
-    ///   - bodyParameters: The body parameters builder
+    ///   - parameters: The body parameters builder
     ///   - session: URLSession to use for the request
     /// - Returns: The updated resource
     /// - Throws: An error if the request fails
@@ -296,13 +355,15 @@ public extension BaseAPIClientProtocol {
         _ components: URLComponents,
         token: String? = nil,
         unwrapBy resourceKey: String? = nil,
-        @APIRequest.Builder.ParametersBuilder bodyParameters: () -> [URLQueryItem] = { [] },
-        session: URLSession = .shared
+        session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> T {
         let request = try APIRequest.Builder(components: components)
             .method(.put)
             .authenticated(with: token)
-            .parameters(builder: bodyParameters)
+            .parameters(builder: parameters)
+            .headers(builder: additionalHeaders)
             .build(components, session: session)
         
         return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey, session: session)
@@ -322,12 +383,14 @@ public extension BaseAPIClientProtocol {
         token: String? = nil,
         unwrapBy resourceKey: String? = nil,
         session: URLSession = .shared,
-        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] }
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> T {
         let request = try APIRequest.Builder(endpoint: endpoint)
             .method(.patch)
             .authenticated(with: token)
             .parameters(builder:parameters)
+            .headers(builder: additionalHeaders)
             .build()
         
         return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey)
@@ -346,13 +409,15 @@ public extension BaseAPIClientProtocol {
         _ components: URLComponents,
         token: String? = nil,
         unwrapBy resourceKey: String? = nil,
-        @APIRequest.Builder.ParametersBuilder bodyParameters: () -> [URLQueryItem] = { [] },
-        session: URLSession = .shared
+        session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> T {
         let request = try APIRequest.Builder(components: components)
             .method(.patch)
             .authenticated(with: token)
-            .parameters(builder: bodyParameters)
+            .parameters(builder: parameters)
+            .headers(builder: additionalHeaders)
             .build(components, session: session)
         
         return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey, session: session)
@@ -369,12 +434,14 @@ public extension BaseAPIClientProtocol {
         endpoint: Endpoints,
         token: String? = nil,
         session: URLSession = .shared,
-        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] }
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws {
         let request = try APIRequest.Builder(endpoint: endpoint)
             .method(.delete)
             .authenticated(with: token)
             .parameters(builder: parameters)
+            .headers(builder: additionalHeaders)
             .build()
         
         try await performRequestWithNoResponse(with: request.urlRequest)
@@ -389,11 +456,13 @@ public extension BaseAPIClientProtocol {
     static func deleteResource(
         _ components: URLComponents,
         token: String? = nil,
-        session: URLSession = .shared
+        session: URLSession = .shared,
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws {
         let request = try APIRequest.Builder(components: components)
             .method(.delete)
             .authenticated(with: token)
+            .headers(builder: additionalHeaders)
             .build(components, session: session)
         
         try await performRequestWithNoResponse(with: request.urlRequest, session: session)

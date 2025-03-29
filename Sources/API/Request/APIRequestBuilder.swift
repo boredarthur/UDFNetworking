@@ -208,6 +208,48 @@ public class APIRequest {
             public static func buildEither(second component: HeaderItem) -> HeaderItem {
                 return component
             }
+            
+            /// Build a block that returns an array of Header items
+            /// - Parameter components: The header items.
+            /// - Returns: A dictionary of header fields and values.
+            public static func buildBlock(_ components: [HeaderItem]) -> [HTTPHeaderField: String] {
+                var headers: [HTTPHeaderField: String] = [:]
+                for item in components {
+                    if let value = item.value {
+                        headers[item.field] = value
+                    }
+                }
+                return headers
+            }
+            
+            /// Build an expression from an array of header items
+            /// - Parameter expression: An array of header items
+            /// - Returns: The array of header items
+            public static func buildExpression(_ expression: [HeaderItem]) -> [HeaderItem] {
+                return expression
+            }
+            
+            /// Build an expression from a single header item
+            /// - Parameter expression: A single header item
+            /// - Returns: Array containing the header item
+            public static func buildExpression(_ expression: HeaderItem) -> [HeaderItem] {
+                return [expression]
+            }
+            
+            /// Build a block with multiple arrays of header items
+            /// - Parameter components: Arrays of header items
+            /// - Returns: A dictionary of header fields and values
+            public static func buildBlock(_ components: [HeaderItem]...) -> [HTTPHeaderField: String] {
+                var headers: [HTTPHeaderField: String] = [:]
+                for component in components {
+                    for item in component {
+                        if let value = item.value {
+                            headers[item.field] = value
+                        }
+                    }
+                }
+                return headers
+            }
         }
         
         /// Set headers using a result builder.
