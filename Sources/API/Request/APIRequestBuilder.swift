@@ -530,7 +530,7 @@ public class APIRequest {
         public func build(_ components: URLComponents, session: URLSession = .shared) throws -> RequestContainer {
             var mutableComponents = components
             
-            if !queryItems.isEmpty && (method == .get || method == .delete) {
+            if !queryItems.isEmpty && (method == .get || method == .delete) && mutableComponents.queryItems?.isEmpty == true {
                 mutableComponents.queryItems = queryItems
             }
             
