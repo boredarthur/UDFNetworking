@@ -29,6 +29,7 @@ public enum URLParameter: Hashable {
     case currentDatetime
     
     // User-related parameters
+    case userId
     case firstName
     case lastName
     case userName
@@ -51,6 +52,7 @@ public enum URLParameter: Hashable {
     case timezone
     case format
     case id
+    case name
     
     // Custom parameters
     case custom(String)
@@ -78,6 +80,7 @@ public enum URLParameter: Hashable {
         case .currentDatetime: return "current_datetime"
             
         // User-related parameters
+        case .userId: return "user_id"
         case .firstName: return "first_name"
         case .lastName: return "last_name"
         case .userName: return "user_name"
@@ -100,6 +103,7 @@ public enum URLParameter: Hashable {
         case .timezone: return "timezone"
         case .format: return "format"
         case .id: return "id"
+        case .name: return "name"
             
         // Custom parameters
         case .custom(let param): return param
