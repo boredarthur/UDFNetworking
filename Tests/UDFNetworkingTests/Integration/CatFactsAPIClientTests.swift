@@ -25,6 +25,16 @@ final class CatFactsAPIClientTests: BaseTests {
         let total: Int
         let from: Int?
         let to: Int?
+        
+        enum CodingKeys: String, CodingKey {
+            case data
+            case perPage = "per_page"
+            case currentPage = "current_page"
+            case lastPage = "last_page"
+            case total
+            case from
+            case to
+        }
     }
     
     private struct CatBreed: Decodable, Equatable {
@@ -43,6 +53,16 @@ final class CatFactsAPIClientTests: BaseTests {
         let total: Int
         let from: Int?
         let to: Int?
+        
+        enum CodingKeys: String, CodingKey {
+            case data
+            case perPage = "per_page"
+            case currentPage = "current_page"
+            case lastPage = "last_page"
+            case total
+            case from
+            case to
+        }
     }
     
     // MARK: - Cat Facts API Client
@@ -52,6 +72,7 @@ final class CatFactsAPIClientTests: BaseTests {
             case facts
             case fact
             case breeds
+            case nonExistent
             
             var rawValue: String {
                 switch self {
@@ -61,6 +82,8 @@ final class CatFactsAPIClientTests: BaseTests {
                     return "/fact"
                 case .breeds:
                     return "/breeds"
+                case .nonExistent:
+                    return "/non-existent-endpoint"
                 }
             }
         }
@@ -154,9 +177,7 @@ final class CatFactsAPIClientTests: BaseTests {
         }
         
         // Fetch a list of cat facts
-        let factsList: CatFactsList = try await CatFactsAPI.fetchResource(
-            endpoint: CatFactsAPI.Endpoints.facts
-        )
+        let factsList: CatFactsList = try await CatFactsAPI.fetchResource(endpoint: .facts)
         
         // Verify we got some facts
         XCTAssertFalse(factsList.data.isEmpty, "Should have fetched at least one cat fact")
@@ -200,9 +221,7 @@ final class CatFactsAPIClientTests: BaseTests {
         }
         
         // Fetch cat breeds
-        let breedsList: CatBreedsList = try await CatFactsAPI.fetchResource(
-            endpoint: CatFactsAPI.Endpoints.breeds
-        )
+        let breedsList: CatBreedsList = try await CatFactsAPI.fetchResource(endpoint: .breeds)
         
         // Verify we got some breeds
         XCTAssertFalse(breedsList.data.isEmpty, "Should have fetched at least one cat breed")
@@ -225,7 +244,7 @@ final class CatFactsAPIClientTests: BaseTests {
             struct EmptyResponse: Decodable {}
             
             let _: EmptyResponse = try await CatFactsAPI.fetchResource(
-                endpoint: "/non-existent-endpoint" as APIEndpoint
+                endpoint: .nonExistent
             )
             XCTFail("Expected an error for invalid endpoint")
         } catch let error as APIError {

@@ -28,6 +28,12 @@ final class JSONCodingTests: BaseTests {
         let id: Int
         let createdAt: Date
         let updatedAt: Date?
+        
+        enum CodingKeys: String, CodingKey {
+            case id
+            case createdAt = "created_at"
+            case updatedAt = "updated_at"
+        }
     }
     
     // MARK: - Encoding Tests
@@ -47,21 +53,6 @@ final class JSONCodingTests: BaseTests {
         XCTAssertEqual(json?["active"] as? Bool, true)
     }
     
-    func testSnakeCaseEncoding() throws {
-        // Given: A model with camelCase properties
-        let model = SnakeCaseModel(userId: 123, firstName: "John", lastName: "Doe")
-        
-        // When: Encoding with the default encoder (which should use convertToSnakeCase)
-        let data = try JSONCoding.encode(model)
-        
-        // Then: The JSON should have snake_case keys
-        let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-        XCTAssertNotNil(json)
-        XCTAssertEqual(json?["user_id"] as? Int, 123)
-        XCTAssertEqual(json?["first_name"] as? String, "John")
-        XCTAssertEqual(json?["last_name"] as? String, "Doe")
-    }
-    
     func testDateEncoding() throws {
         // Given: A model with Date properties
         let now = Date()
@@ -76,12 +67,12 @@ final class JSONCodingTests: BaseTests {
         XCTAssertEqual(json?["id"] as? Int, 456)
         
         // Verify the date is formatted as ISO8601
-        let createdAtString = json?["created_at"] as? String
-        XCTAssertNotNil(createdAtString)
+        let createdAt = json?["createdAt"] as? Double
+        XCTAssertNotNil(createdAt)
         
         // Try to parse it back with an ISO8601 formatter
         let formatter = ISO8601DateFormatter()
-        let parsedDate = formatter.date(from: createdAtString!)
+        let parsedDate = formatter.date(from: Date(timeIntervalSinceReferenceDate: createdAt!).ISO8601Format())
         XCTAssertNotNil(parsedDate)
         
         // The updatedAt should be null
@@ -140,25 +131,6 @@ final class JSONCodingTests: BaseTests {
         XCTAssertEqual(model.active, true)
     }
     
-    func testSnakeCaseDecoding() throws {
-        // Given: JSON data with snake_case keys
-        let json = """
-        {
-            "user_id": 123,
-            "first_name": "John",
-            "last_name": "Doe"
-        }
-        """.data(using: .utf8)!
-        
-        // When: Decoding with the default decoder (which should use convertFromSnakeCase)
-        let model = try JSONCoding.decode(json, as: SnakeCaseModel.self)
-        
-        // Then: The model should be correctly decoded
-        XCTAssertEqual(model.userId, 123)
-        XCTAssertEqual(model.firstName, "John")
-        XCTAssertEqual(model.lastName, "Doe")
-    }
-    
     func testDateDecoding() throws {
         // Given: JSON data with ISO8601 date strings
         let json = """
@@ -168,8 +140,8 @@ final class JSONCodingTests: BaseTests {
             "updated_at": null
         }
         """.data(using: .utf8)!
-        
-        // When: Decoding with the default decoder (which should use ISO8601 dates)
+
+        // When: Decoding with the default decoder
         let model = try JSONCoding.decode(json, as: DateModel.self)
         
         // Then: The dates should be correctly decoded

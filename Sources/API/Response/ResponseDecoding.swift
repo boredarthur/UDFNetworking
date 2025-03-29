@@ -9,6 +9,13 @@ import Foundation
 
 /// Utility for decoding API responses.
 public enum ResponseDecoding {
+    /// Default JSON decoder with common settings.
+    public static let defaultDecoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }()
+    
     /// Decode a data object into a model.
     /// - Parameters:
     ///   - data: The data to decode.
@@ -16,7 +23,7 @@ public enum ResponseDecoding {
     ///   - decoder: The JSON decoder to use (defaults to standard configuration).
     /// - Returns: The decoded model.
     /// - Throws: An error if decoding fails.
-    public static func decode<T: Decodable>(_ data: Data, as type: T.Type, decoder: JSONDecoder = .init()) throws -> T {
+    public static func decode<T: Decodable>(_ data: Data, as type: T.Type, decoder: JSONDecoder = defaultDecoder) throws -> T {
         do {
             return try decoder.decode(type, from: data)
         } catch {
