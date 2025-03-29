@@ -17,7 +17,8 @@ public extension BaseAPIClientProtocol {
     ///   - token: The authentication token (if any).
     ///   - resourceKey: The key to unwrap the response by (if any).
     ///   - session: URLSession to use for the request (defaults to shared).
-    ///   - parameters: The query parameters for GET requests.
+    ///   - parameters: The query parameters for GET 
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Returns: The decoded resource.
     /// - Throws: An error if the request fails.
     static func fetchResource<T: Decodable>(
@@ -44,6 +45,8 @@ public extension BaseAPIClientProtocol {
     ///   - token: The authentication token (if any)
     ///   - resourceKey: The key to unwrap the response by (if any)
     ///   - session: URLSession to use for the request (defaults to shared)
+    ///   - parameters: The query parameters for GET requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Returns: The decoded resource
     /// - Throws: An error if the request fails
     static func fetchResource<T: Decodable>(
@@ -51,11 +54,13 @@ public extension BaseAPIClientProtocol {
         token: String? = nil,
         unwrapBy resourceKey: String? = nil,
         session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
         @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> T {
         let request = try APIRequest.Builder(components: components)
             .method(.get)
             .authenticated(with: token)
+            .parameters(builder: parameters)
             .headers(builder: additionalHeaders)
             .build(components, session: session)
         
@@ -69,6 +74,7 @@ public extension BaseAPIClientProtocol {
     ///   - collectionKey: The key to unwrap the collection by (if any).
     ///   - session: URLSession to use for the request (defaults to shared).
     ///   - parameters: The query parameters for GET requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Returns: The decoded collection.
     /// - Throws: An error if the request fails.
     static func fetchCollection<T: Decodable>(
@@ -95,6 +101,8 @@ public extension BaseAPIClientProtocol {
     ///   - token: The authentication token (if any)
     ///   - collectionKey: The key to unwrap the collection by
     ///   - session: URLSession to use for the request (defaults to shared)
+    ///   - parameters: The query parameters for GET requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Returns: The decoded collection
     /// - Throws: An error if the request fails
     static func fetchCollection<T: Decodable>(
@@ -102,11 +110,13 @@ public extension BaseAPIClientProtocol {
         token: String? = nil,
         unwrapBy collectionKey: String? = nil,
         session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
         @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> [T] {
         let request = try APIRequest.Builder(components: components)
             .method(.get)
             .authenticated(with: token)
+            .parameters(builder: parameters)
             .headers(builder: additionalHeaders)
             .build(components, session: session)
         
@@ -121,7 +131,8 @@ public extension BaseAPIClientProtocol {
     ///   - token: The authentication token (if any).
     ///   - collectionKey: The key to unwrap the collection by.
     ///   - session: URLSession to use for the request (defaults to shared).
-    ///   - additionalParameters: Additional query parameters for the request.
+    ///   - parameters: The query parameters for GET requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Returns: The decoded collection.
     /// - Throws: An error if the request fails.
     static func fetchCollection<T: Decodable>(
@@ -131,7 +142,7 @@ public extension BaseAPIClientProtocol {
         token: String? = nil,
         unwrapBy collectionKey: String? = nil,
         session: URLSession = .shared,
-        @APIRequest.Builder.ParametersBuilder additionalParameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
         @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> [T] {
         guard let configuration = API.configuration else {
@@ -145,7 +156,7 @@ public extension BaseAPIClientProtocol {
                 URLQueryItem(name: configuration.pageParameterName, value: "\(page)")
                 URLQueryItem(name: configuration.perPageParameterName, value: "\(perPage)")
                 
-                additionalParameters()
+                parameters()
             }
             .headers(builder: additionalHeaders)
             .build(session: session)
@@ -161,7 +172,8 @@ public extension BaseAPIClientProtocol {
     ///   - token: The authentication token (if any).
     ///   - collectionKey: The key to unwrap the collection by.
     ///   - session: URLSession to use for the request (defaults to shared).
-    ///   - additionalParameters: Additional query parameters for the request.
+    ///   - parameters: The query parameters for GET requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Returns: The decoded collection.
     /// - Throws: An error if the request fails.
     static func fetchCollection<T: Decodable>(
@@ -171,7 +183,7 @@ public extension BaseAPIClientProtocol {
         token: String? = nil,
         unwrapBy collectionKey: String? = nil,
         session: URLSession = .shared,
-        @APIRequest.Builder.ParametersBuilder additionalParameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
         @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> [T] {
         guard let configuration = API.configuration else {
@@ -183,8 +195,7 @@ public extension BaseAPIClientProtocol {
             URLQueryItem(name: configuration.pageParameterName, value: "\(page)")
             URLQueryItem(name: configuration.perPageParameterName, value: "\(perPage)")
             
-            // Add any additional parameters
-            additionalParameters()
+            parameters()
         }
         
         let request = try APIRequest.Builder(components: paginatedComponents)
@@ -205,6 +216,7 @@ public extension BaseAPIClientProtocol {
     ///   - resourceKey: The key to unwrap the response by (if any).
     ///   - session: URLSession to use for the request (defaults to shared).
     ///   - parameters: The parameters for the request body in POST requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Returns: The created resource.
     /// - Throws: An error if the request fails.
     static func createResource<T: Decodable>(
@@ -232,6 +244,8 @@ public extension BaseAPIClientProtocol {
     ///   - resourceKey: The key to unwrap the response by (if any)
     ///   - bodyParameters: The body parameters builder
     ///   - session: URLSession to use for the request
+    ///   - parameters: The parameters for the request body in POST requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Returns: The created resource
     /// - Throws: An error if the request fails
     static func createResource<T: Decodable>(
@@ -260,6 +274,7 @@ public extension BaseAPIClientProtocol {
     ///   - token: The authentication token (if any).
     ///   - unwrapBy: The key to unwrap the response by (if any).
     ///   - session: URLSession to use for the request (defaults to shared).
+    ///   - parameters: The parameters for the request body in POST requests.
     ///   - additionalHeaders: Additional headers to include in the request.
     /// - Returns: The created resource.
     /// - Throws: An error if the request fails.
@@ -270,11 +285,13 @@ public extension BaseAPIClientProtocol {
         token: String? = nil,
         unwrapBy: String? = nil,
         session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
         @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> T {
         let requestBuilder = APIRequest.Builder(endpoint: endpoint)
             .method(.post)
             .authenticated(with: token)
+            .parameters(builder: parameters)
             .headers {
                 HeaderItem(.contentType, contentType)
                 
@@ -297,6 +314,7 @@ public extension BaseAPIClientProtocol {
     ///   - token: The authentication token (if any).
     ///   - session: URLSession to use for the request (defaults to shared).
     ///   - parameters: The parameters for the request body in POST requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Throws: An error if the request fails.
     static func createResource(
         endpoint: Endpoints,
@@ -322,6 +340,7 @@ public extension BaseAPIClientProtocol {
     ///   - resourceKey: The key to unwrap the response by (if any).
     ///   - session: URLSession to use for the request (defaults to shared).
     ///   - parameters: The parameters for the request body in PUT requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Returns: The updated resource.
     /// - Throws: An error if the request fails.
     static func updateResource<T: Decodable>(
@@ -347,8 +366,9 @@ public extension BaseAPIClientProtocol {
     ///   - components: The URLComponents to use
     ///   - token: The authentication token (if any)
     ///   - resourceKey: The key to unwrap the response by (if any)
-    ///   - parameters: The body parameters builder
     ///   - session: URLSession to use for the request
+    ///   - parameters: The body parameters builder
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Returns: The updated resource
     /// - Throws: An error if the request fails
     static func updateResource<T: Decodable>(
@@ -374,8 +394,9 @@ public extension BaseAPIClientProtocol {
     ///   - endpoint: The API endpoint.
     ///   - token: The authentication token (if any).
     ///   - resourceKey: The key to unwrap the response by (if any).
-    ///   - session: URLSession to use for the request (defaults to shared).
     ///   - parameters: The parameters for the request body in PATCH requests.
+    ///   - session: URLSession to use for the request (defaults to shared).
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Returns: The patched resource.
     /// - Throws: An error if the request fails.
     static func patchResource<T: Decodable>(
@@ -401,8 +422,9 @@ public extension BaseAPIClientProtocol {
     ///   - components: The URLComponents to use
     ///   - token: The authentication token (if any)
     ///   - resourceKey: The key to unwrap the response by (if any)
-    ///   - bodyParameters: The body parameters builder
     ///   - session: URLSession to use for the request
+    ///   - parameters: The body parameters builder
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Returns: The patched resource
     /// - Throws: An error if the request fails
     static func patchResource<T: Decodable>(
@@ -429,6 +451,7 @@ public extension BaseAPIClientProtocol {
     ///   - token: The authentication token (if any).
     ///   - session: URLSession to use for the request (defaults to shared).
     ///   - parameters: Optional parameters for DELETE requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Throws: An error if the request fails.
     static func deleteResource(
         endpoint: Endpoints,
@@ -452,16 +475,20 @@ public extension BaseAPIClientProtocol {
     ///   - components: The URLComponents to use
     ///   - token: The authentication token (if any)
     ///   - session: URLSession to use for the request
+    ///   - parameters: Optional parameters for DELETE requests.
+    ///   - additionalHeaders: Additional headers to include in the request.
     /// - Throws: An error if the request fails
     static func deleteResource(
         _ components: URLComponents,
         token: String? = nil,
         session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
         @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws {
         let request = try APIRequest.Builder(components: components)
             .method(.delete)
             .authenticated(with: token)
+            .parameters(builder: parameters)
             .headers(builder: additionalHeaders)
             .build(components, session: session)
         
