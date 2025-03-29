@@ -1,4 +1,19 @@
-Configuring Logging
+# UDFNetworking Logging System
+
+UDFNetworking includes a comprehensive logging system to help with debugging and monitoring network requests. This document explains how to configure and use the logging system effectively.
+
+## Log Levels
+
+The logging system supports four distinct levels of verbosity:
+
+| Level | Description |
+|-------|-------------|
+| `.none` | No logging is performed. Use this in production environments where logging is not needed. |
+| `.error` | Only errors and failed requests are logged. This is the default setting and is suitable for most production environments. |
+| `.debug` | Basic request and response information is logged, including URLs, methods, and status codes. Useful for development and testing environments. |
+| `.verbose` | Detailed information including headers, request bodies, and response bodies is logged. This provides maximum visibility but may impact performance and should only be used during development or troubleshooting. |
+
+## Configuring Logging
 
 Logging is configured as part of your API configuration. This ensures that logging settings are centralized and consistent:
 
