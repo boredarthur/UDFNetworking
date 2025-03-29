@@ -266,6 +266,34 @@ public extension BaseAPIClientProtocol {
         return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey, session: session)
     }
     
+    /// Patch a resource.
+    /// - Parameters:
+    ///   - endpoint: The API endpoint.
+    ///   - token: The authentication token (if any).
+    ///   - resourceKey: The key to unwrap the response by (if any).
+    ///   - parameters: The parameters for the request body in PATCH requests.
+    ///   - session: URLSession to use for the request (defaults to shared).
+    ///   - additionalHeaders: Additional headers to include in the request.
+    /// - Returns: The patched resource.
+    /// - Throws: An error if the request fails.
+    static func patchResource<T: Decodable>(
+        endpoint: Endpoints,
+        token: String? = nil,
+        unwrapBy resourceKey: String? = nil,
+        session: URLSession = .shared,
+        @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
+        @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
+    ) async throws -> T {
+        let request = try APIRequest.Builder(endpoint: endpoint)
+            .method(.patch)
+            .authenticated(with: token)
+            .parameters(builder:parameters)
+            .headers(builder: additionalHeaders)
+            .build()
+        
+        return try await performRequest(with: request.urlRequest, unwrapBy: resourceKey)
+    }
+    
     /// Create a resource with custom binary data in the request body.
     /// - Parameters:
     ///   - endpoint: The API endpoint.
@@ -288,8 +316,9 @@ public extension BaseAPIClientProtocol {
         @APIRequest.Builder.ParametersBuilder parameters: () -> [URLQueryItem] = { [] },
         @APIRequest.Builder.HeadersBuilder additionalHeaders: () -> [HTTPHeaderField: String] = { [:] }
     ) async throws -> T {
-        let requestBuilder = APIRequest.Builder(endpoint: endpoint)
+        let urlRequest = try APIRequest.Builder(endpoint: endpoint)
             .method(.post)
+            .jsonBody(bodyData)
             .authenticated(with: token)
             .parameters(builder: parameters)
             .headers {
@@ -299,11 +328,8 @@ public extension BaseAPIClientProtocol {
                     HeaderItem(field, value)
                 }
             }
-        
-        let requestContainer = try requestBuilder.build(session: session)
-        
-        var urlRequest = requestContainer.urlRequest
-        urlRequest.httpBody = bodyData
+            .build()
+            .urlRequest
         
         return try await performRequest(with: urlRequest, unwrapBy: unwrapBy, session: session)
     }
@@ -392,6 +418,7 @@ public extension BaseAPIClientProtocol {
     /// Patch a resource.
     /// - Parameters:
     ///   - endpoint: The API endpoint.
+    ///   - bodyData: The raw data to include in the request body.
     ///   - token: The authentication token (if any).
     ///   - resourceKey: The key to unwrap the response by (if any).
     ///   - parameters: The parameters for the request body in PATCH requests.
@@ -401,6 +428,7 @@ public extension BaseAPIClientProtocol {
     /// - Throws: An error if the request fails.
     static func patchResource<T: Decodable>(
         endpoint: Endpoints,
+        bodyData: Data,
         token: String? = nil,
         unwrapBy resourceKey: String? = nil,
         session: URLSession = .shared,
@@ -409,6 +437,7 @@ public extension BaseAPIClientProtocol {
     ) async throws -> T {
         let request = try APIRequest.Builder(endpoint: endpoint)
             .method(.patch)
+            .jsonBody(bodyData)
             .authenticated(with: token)
             .parameters(builder:parameters)
             .headers(builder: additionalHeaders)
