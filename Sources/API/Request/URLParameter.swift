@@ -50,6 +50,7 @@ public enum URLParameter: Hashable {
     case deviceId
     case timezone
     case format
+    case id
     
     // Custom parameters
     case custom(String)
@@ -98,6 +99,7 @@ public enum URLParameter: Hashable {
         case .deviceId: return "device_id"
         case .timezone: return "timezone"
         case .format: return "format"
+        case .id: return "id"
             
         // Custom parameters
         case .custom(let param): return param
