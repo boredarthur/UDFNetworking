@@ -18,6 +18,14 @@ extension String: APIEndpoint {
     public var rawValue: String { return self }
 }
 
+extension APIEndpoint {
+    /// Create URLComponents for this endpoint
+    /// - Returns: URLComponents for the endpoint
+    public func components() throws -> URLComponents {
+        return try URLComponents.forAPI(endpoint: self)
+    }
+}
+
 extension RawRepresentable where RawValue == String, Self: APIEndpoint {
     /// Get the endpoint path
     public var endpointPath: String { return self.rawValue }

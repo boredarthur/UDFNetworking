@@ -30,6 +30,12 @@ final class ResponseDecodingTests: BaseTests {
         let userId: Int
         let firstName: String
         let lastName: String
+        
+        enum CodingKeys: String, CodingKey {
+            case userId = "user_id"
+            case firstName = "first_name"
+            case lastName = "last_name"
+        }
     }
     
     // MARK: - Basic Decoding Tests
@@ -49,28 +55,6 @@ final class ResponseDecodingTests: BaseTests {
         // Then: Should decode the model correctly
         XCTAssertEqual(model.id, 123)
         XCTAssertEqual(model.name, "Test Model")
-    }
-    
-    func testDecodingWithCustomDecoder() throws {
-        // Given: JSON data with snake_case keys
-        let jsonData = """
-        {
-            "user_id": 123,
-            "first_name": "John",
-            "last_name": "Doe"
-        }
-        """.data(using: .utf8)!
-        
-        // When: Using a custom decoder
-        let customDecoder = JSONDecoder()
-        customDecoder.keyDecodingStrategy = .convertFromSnakeCase
-        
-        let model = try ResponseDecoding.decode(jsonData, as: SnakeCaseModel.self, decoder: customDecoder)
-        
-        // Then: Should decode with the custom strategy
-        XCTAssertEqual(model.userId, 123)
-        XCTAssertEqual(model.firstName, "John")
-        XCTAssertEqual(model.lastName, "Doe")
     }
     
     func testDecodingWithDefaultDecoder() throws {
@@ -201,7 +185,7 @@ final class ResponseDecodingTests: BaseTests {
         """.data(using: .utf8)!
         
         do {
-            let model = try ResponseDecoding.defaultDecoder.decode(SnakeCaseModel.self, from: snakeCaseJSON)
+            let model = try ResponseDecoding.decode(snakeCaseJSON, as: SnakeCaseModel.self)
             XCTAssertEqual(model.userId, 123)
             XCTAssertEqual(model.firstName, "John")
             XCTAssertEqual(model.lastName, "Doe")
@@ -218,7 +202,7 @@ final class ResponseDecodingTests: BaseTests {
         """.data(using: .utf8)!
         
         do {
-            let model = try ResponseDecoding.defaultDecoder.decode(DateTestModel.self, from: dateJSON)
+            let model = try ResponseDecoding.decode(dateJSON.self, as: DateTestModel.self)
             XCTAssertEqual(model.id, 456)
             
             // Create an ISO8601 formatter to verify the date

@@ -12,7 +12,6 @@ public enum JSONCoding {
     /// Default JSON encoder with common settings.
     public static let defaultEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.dateEncodingStrategy = .iso8601
         return encoder
     }()
@@ -20,7 +19,6 @@ public enum JSONCoding {
     /// Default JSON decoder with common settings.
     public static let defaultDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
         decoder.dateDecodingStrategy = .iso8601
         return decoder
     }()

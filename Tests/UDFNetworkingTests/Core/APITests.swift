@@ -17,6 +17,16 @@ struct TestResponse: Decodable {
 }
 
 enum TestAPIClient: BaseAPIClientProtocol {
+    public enum Endpoints: APIEndpoint {
+        case test
+        
+        public var rawValue: String {
+            switch self {
+            case .test: "api/test-endpoint"
+            }
+        }
+    }
+    
     static func makeTestRequest(session: URLSession) async throws -> TestResponse {
         let url = URL(string: "https://example.com/api/test-endpoint")!
         var urlRequest = URLRequest(url: url)

@@ -80,10 +80,48 @@ public class APIRequest {
         /// The timeout interval.
         private var timeoutInterval: TimeInterval?
         
+        /// Custom data for the body.
+        private var customBody: Data?
+        
         /// Initialize a builder with an endpoint.
         /// - Parameter endpoint: The API endpoint.
         public init(endpoint: APIEndpoint) {
             self.endpoint = endpoint.rawValue
+        }
+        
+        /// Initialize a builder with URLComponents
+        /// - Parameter components: The URLComponents to use for the request
+        public init(components: URLComponents) throws {
+            guard let url = components.url else {
+                throw APIError.invalidURL
+            }
+            
+            // Extract the path from the URL
+            // If using a base URL, we need to remove it from the path
+            if let configuration = API.configuration {
+                let baseURLString = configuration.baseURL.absoluteString
+                let urlString = url.absoluteString
+                
+                if urlString.hasPrefix(baseURLString) {
+                    // If URL starts with baseURL, extract just the endpoint part
+                    let endpoint = String(urlString.dropFirst(baseURLString.count))
+                    self.init(endpoint: endpoint)
+                } else {
+                    // Otherwise, use the full URL as a custom endpoint
+                    self.init(endpoint: urlString as APIEndpoint)
+                }
+            } else {
+                // If API isn't configured, use the full URL
+                self.init(endpoint: url.absoluteString as APIEndpoint)
+            }
+            
+            // If components have query items, add them as parameters
+            if let queryItems = components.queryItems, !queryItems.isEmpty {
+                // Use the parameters method to add query items
+                _ = self.parameters {
+                    queryItems
+                }
+            }
         }
         
         /// Set the HTTP method.
@@ -111,6 +149,54 @@ public class APIRequest {
             var builder = self
             builder.timeoutInterval = interval
             return builder
+        }
+        
+        /// Adds a JSON body to the request, handling different input types intelligently.
+        ///
+        /// This method can accept different types of inputs:
+        /// - Encodable objects (will be encoded to JSON)
+        /// - Data objects (if already JSON-serialized data)
+        /// - Dictionaries and arrays (will be serialized to JSON)
+        ///
+        /// - Parameters:
+        ///   - object: The object to use as the request body. Can be an `Encodable` object, pre-serialized JSON `Data`, 
+        ///             a dictionary `[String: Any]`, or an array `[Any]`.
+        ///   - encoder: The JSON encoder to use for encoding `Encodable` objects. Defaults to a standard encoder.
+        ///
+        /// - Returns: A new builder instance with the JSON body and appropriate Content-Type header added.
+        ///
+        /// - Note: If the provided data is already serialized JSON, it will be used directly without re-encoding.
+        ///         If the object cannot be converted to valid JSON, the original builder will be returned unchanged.
+        public func jsonBody<T>(_ object: T, encoder: JSONEncoder = JSONEncoder()) -> Builder {
+            var newBuilder = self
+            
+            do {
+                let jsonData: Data
+                
+                if let dataObject = object as? Data {
+                    jsonData = dataObject
+                } else if let encodableObject = object as? Encodable {
+                    jsonData = try encoder.encode(encodableObject)
+                } else {
+                    if let dictionary = object as? [String: Any] {
+                        jsonData = try JSONSerialization.data(withJSONObject: dictionary)
+                    } else if let array = object as? [Any] {
+                        jsonData = try JSONSerialization.data(withJSONObject: array)
+                    } else {
+                        return self
+                    }
+                }
+                
+                newBuilder.customBody = jsonData
+                
+                var updatedHeaders = newBuilder.headers
+                updatedHeaders[.contentType] = "application/json"
+                newBuilder.headers = updatedHeaders
+                
+                return newBuilder
+            } catch {
+                return self
+            }
         }
         
         // MARK: - Header Builders
@@ -151,6 +237,48 @@ public class APIRequest {
             public static func buildEither(second component: HeaderItem) -> HeaderItem {
                 return component
             }
+            
+            /// Build a block that returns an array of Header items
+            /// - Parameter components: The header items.
+            /// - Returns: A dictionary of header fields and values.
+            public static func buildBlock(_ components: [HeaderItem]) -> [HTTPHeaderField: String] {
+                var headers: [HTTPHeaderField: String] = [:]
+                for item in components {
+                    if let value = item.value {
+                        headers[item.field] = value
+                    }
+                }
+                return headers
+            }
+            
+            /// Build an expression from an array of header items
+            /// - Parameter expression: An array of header items
+            /// - Returns: The array of header items
+            public static func buildExpression(_ expression: [HeaderItem]) -> [HeaderItem] {
+                return expression
+            }
+            
+            /// Build an expression from a single header item
+            /// - Parameter expression: A single header item
+            /// - Returns: Array containing the header item
+            public static func buildExpression(_ expression: HeaderItem) -> [HeaderItem] {
+                return [expression]
+            }
+            
+            /// Build a block with multiple arrays of header items
+            /// - Parameter components: Arrays of header items
+            /// - Returns: A dictionary of header fields and values
+            public static func buildBlock(_ components: [HeaderItem]...) -> [HTTPHeaderField: String] {
+                var headers: [HTTPHeaderField: String] = [:]
+                for component in components {
+                    for item in component {
+                        if let value = item.value {
+                            headers[item.field] = value
+                        }
+                    }
+                }
+                return headers
+            }
         }
         
         /// Set headers using a result builder.
@@ -158,7 +286,15 @@ public class APIRequest {
         /// - Returns: The updated builder.
         public func headers(@HeadersBuilder builder: () -> [HTTPHeaderField: String]) -> Builder {
             var newBuilder = self
-            newBuilder.headers = builder()
+            
+            let newHeaders = builder()
+            
+            var mergedHeaders = newBuilder.headers
+            for (key, value) in newHeaders {
+                mergedHeaders[key] = value
+            }
+            
+            newBuilder.headers = mergedHeaders
             return newBuilder
         }
         
@@ -241,11 +377,11 @@ public class APIRequest {
         /// Set parameters using a result builder.
         /// - Parameter builder: The parameter builder.
         /// - Returns: The updated builder.
-        func parameters(@ParametersBuilder builder parameters: () -> [URLQueryItem]) -> Builder {
+        public func parameters(@ParametersBuilder builder parameters: () -> [URLQueryItem]) -> Builder {
             var newBuilder = self
             
-            // For GET requests, these are query parameters
-            if method == .get {
+            // For GET and DELETE requests, these are query parameters
+            if method == .get || method == .delete {
                 newBuilder.queryItems = parameters()
                 return newBuilder
             }
@@ -282,7 +418,14 @@ public class APIRequest {
         /// - Returns: The updated builder.
         public func authenticated(with token: String?) -> Builder {
             guard let token = token, !token.isEmpty else { return self }
-            return headers { HeaderItem(.authorization, token) }
+            
+            var newBuilder = self
+            
+            var updatedHeaders = newBuilder.headers
+            updatedHeaders[.authorization] = token
+            newBuilder.headers = updatedHeaders
+            
+            return newBuilder
         }
         
         /// Add pagination parameters to the request.
@@ -292,8 +435,12 @@ public class APIRequest {
         /// - Returns: The updated builder.
         public func paged(page: Int, perPage: Int = 20) -> Builder {
             return parameters {
-                URLParameter.page.queryItem(page)
-                URLParameter.perPage.queryItem(perPage)
+                let config = API.configuration
+                let pageParam = config?.pageParameterName ?? URLParameter.page.rawValue
+                let perPageParam = config?.perPageParameterName ?? URLParameter.perPage.rawValue
+                
+                URLQueryItem(name: pageParam, value: "\(page)")
+                URLQueryItem(name: perPageParam, value: "\(perPage)")
             }
         }
         
@@ -326,7 +473,7 @@ public class APIRequest {
                 throw APIError.invalidURL
             }
             
-            if !queryItems.isEmpty && method == .get {
+            if !queryItems.isEmpty && (method == .get || method == .delete) {
                 components.queryItems = queryItems
             }
             
@@ -352,7 +499,9 @@ public class APIRequest {
             }
             
             // Handle body for non-GET requests
-            if method != .get {
+            if let customBody {
+                request.httpBody = customBody
+            } else if method != .get {
                 // Process bodyParameters for non-GET requests
                 if !bodyParameters.isEmpty {
                     do {
@@ -366,6 +515,61 @@ public class APIRequest {
                     } catch {
                         throw APIError.invalidBody
                     }
+                }
+            }
+            
+            return RequestContainer(urlRequest: request, session: session)
+        }
+        
+        /// Build a request directly from URLComponents
+        /// - Parameters:
+        ///   - components: The URLComponents to use
+        ///   - session: The URLSession to use for making requests
+        /// - Returns: The request container
+        /// - Throws: An error if the build fails
+        public func build(_ components: URLComponents, session: URLSession = .shared) throws -> RequestContainer {
+            var mutableComponents = components
+            
+            if !queryItems.isEmpty && (method == .get || method == .delete) && mutableComponents.queryItems == nil {
+                mutableComponents.queryItems = queryItems
+            }
+            
+            guard let url = mutableComponents.url else {
+                throw APIError.invalidURL
+            }
+            
+            var request = URLRequest(
+                url: url,
+                cachePolicy: cachePolicy,
+                timeoutInterval: timeoutInterval ?? API.configuration?.timeoutInterval ?? 30
+            )
+            request.httpMethod = method.rawValue
+            
+            if let defaultHeaders = API.configuration?.defaultHeaders {
+                for (key, value) in defaultHeaders {
+                    request.setValue(value, forHTTPHeaderField: key)
+                }
+            }
+            
+            // Add custom headers
+            for (field, value) in headers {
+                request.setValue(value, forHTTPHeaderField: field.rawValue)
+            }
+            
+            // Handle body for non-GET requests
+            if let customBody {
+                request.httpBody = customBody
+            } else if method != .get && !bodyParameters.isEmpty {
+                do {
+                    let jsonData = try JSONSerialization.data(withJSONObject: bodyParameters)
+                    request.httpBody = jsonData
+                    
+                    // Ensure content-type is set to application/json
+                    if request.value(forHTTPHeaderField: "Content-Type") == nil {
+                        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    }
+                } catch {
+                    throw APIError.invalidBody
                 }
             }
             
