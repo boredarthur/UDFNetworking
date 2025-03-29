@@ -34,6 +34,11 @@ public protocol BaseAPIClientProtocol {
         with request: URLRequest,
         session: URLSession
     ) async throws
+    
+    /// Get a custom value from the API configuration.
+    /// - Parameter key: The key for the stored value.
+    /// - Returns: The stored value, or nil if not found.
+    static func getCustomValue<T>(forKey key: String) -> T?
 }
 
 /// Default implementation of BaseAPIClientProtocol.
@@ -124,5 +129,12 @@ public extension BaseAPIClientProtocol {
                 }
             }.resume()
         }
+    }
+    
+    /// Get a custom value from the API configuration.
+    /// - Parameter key: The key for the stored value.
+    /// - Returns: The stored value, or nil if not found.
+    static func getCustomValue<T>(forKey key: String) -> T? {
+        return API.configuration?.getValue(forKey: key)
     }
 }
