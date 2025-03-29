@@ -380,7 +380,7 @@ public class APIRequest {
         public func parameters(@ParametersBuilder builder parameters: () -> [URLQueryItem]) -> Builder {
             var newBuilder = self
             
-            // For GET requests, these are query parameters
+            // For GET and DELETE requests, these are query parameters
             if method == .get || method == .delete {
                 newBuilder.queryItems = parameters()
                 return newBuilder
@@ -473,7 +473,7 @@ public class APIRequest {
                 throw APIError.invalidURL
             }
             
-            if !queryItems.isEmpty && method == .get {
+            if !queryItems.isEmpty && (method == .get || method == .delete) {
                 components.queryItems = queryItems
             }
             
