@@ -155,16 +155,15 @@ public class APIRequest {
             var newBuilder = self
             
             do {
-                // Encode the object to JSON data
                 let jsonData = try encoder.encode(object)
                 
-                // Store the JSON data to be set as the httpBody when building
                 newBuilder.customBody = jsonData
                 
-                // Ensure content-type is set to application/json
-                return newBuilder.headers {
-                    HeaderItem(.contentType, "application/json")
-                }
+                var updatedHeaders = newBuilder.headers
+                updatedHeaders[.contentType] = "application/json"
+                newBuilder.headers = updatedHeaders
+                
+                return newBuilder
             } catch {
                 return self
             }
