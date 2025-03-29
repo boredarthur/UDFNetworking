@@ -9,29 +9,13 @@ import Foundation
 
 /// Utilities for JSON encoding and decoding.
 public enum JSONCoding {
-    /// Default JSON encoder with common settings.
-    public static let defaultEncoder: JSONEncoder = {
-        let encoder = JSONEncoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
-        encoder.dateEncodingStrategy = .iso8601
-        return encoder
-    }()
-    
-    /// Default JSON decoder with common settings.
-    public static let defaultDecoder: JSONDecoder = {
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        decoder.dateDecodingStrategy = .iso8601
-        return decoder
-    }()
-    
     /// Encode a value to JSON data.
     /// - Parameters:
     ///   - value: The value to encode.
     ///   - encoder: The JSON encoder to use.
     /// - Returns: The encoded JSON data.
     /// - Throws: An error if encoding fails.
-    public static func encode<T: Encodable>(_ value: T, encoder: JSONEncoder = defaultEncoder) throws -> Data {
+    public static func encode<T: Encodable>(_ value: T, encoder: JSONEncoder = .init()) throws -> Data {
         return try encoder.encode(value)
     }
     
@@ -41,7 +25,7 @@ public enum JSONCoding {
     ///   - encoder: The JSON encoder to use.
     /// - Returns: The encoded JSON string.
     /// - Throws: An error if encoding fails.
-    public static func encodeToString<T: Encodable>(_ value: T, encoder: JSONEncoder = defaultEncoder) throws -> String {
+    public static func encodeToString<T: Encodable>(_ value: T, encoder: JSONEncoder = .init()) throws -> String {
         let data = try encode(value, encoder: encoder)
         if let string = String(data: data, encoding: .utf8) {
             return string
@@ -56,7 +40,7 @@ public enum JSONCoding {
     ///   - decoder: The JSON decoder to use.
     /// - Returns: The decoded value.
     /// - Throws: An error if decoding fails.
-    public static func decode<T: Decodable>(_ data: Data, as type: T.Type, decoder: JSONDecoder = defaultDecoder) throws -> T {
+    public static func decode<T: Decodable>(_ data: Data, as type: T.Type, decoder: JSONDecoder = .init()) throws -> T {
         return try decoder.decode(type, from: data)
     }
     
@@ -67,7 +51,7 @@ public enum JSONCoding {
     ///   - decoder: The JSON decoder to use.
     /// - Returns: The decoded value.
     /// - Throws: An error if decoding fails.
-    public static func decode<T: Decodable>(_ string: String, as type: T.Type, decoder: JSONDecoder = defaultDecoder) throws -> T {
+    public static func decode<T: Decodable>(_ string: String, as type: T.Type, decoder: JSONDecoder = .init()) throws -> T {
         guard let data = string.data(using: .utf8) else {
             throw APIError.invalidJSON
         }
